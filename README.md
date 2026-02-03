@@ -1,4 +1,4 @@
-# PM Skills Assessment Platformx
+# PM Skills Assessment Platformxx
 
 A free project management skills assessment platform designed to generate leads for training courses, simulations, and PM tools.
 
