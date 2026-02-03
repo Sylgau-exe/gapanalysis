@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Assessments | PM SkillsAssess</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 500: '#e87308', 600: '#c75706' },
+            stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+<body class="bg-stone-900 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/" class="flex items-center gap-3 text-white font-semibold text-lg">
+        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        PM Skills<span class="text-brand-500">Assess</span>
+      </a>
+      <nav id="headerNav" class="flex items-center gap-4">
+        <span class="text-stone-400 text-sm">Loading...</span>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto py-12 px-6">
+    <div id="content">
+      <div class="flex justify-center py-20">
+        <div class="animate-spin w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentUser = null;
+    const authToken = localStorage.getItem('auth_token');
+
+    async function init() {
+      if (!authToken) {
+        window.location.href = '/#login';
+        return;
+      }
+
+      try {
+        // Get user info
+        const userRes = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!userRes.ok) throw new Error('Not authenticated');
+        const userData = await userRes.json();
+        currentUser = userData.user;
+
+        // Update header
+        document.getElementById('headerNav').innerHTML = `
+          <span class="text-stone-400 text-sm">Hi, <span class="text-white font-medium">${currentUser.name}</span></span>
+          ${currentUser.isAdmin ? '<a href="/admin.html" class="text-brand-500 hover:text-brand-400 text-sm font-medium">Admin</a>' : ''}
+          <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Logout</button>
+        `;
+
+        // Get assessments
+        const assessRes = await fetch('/api/assessment/history', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const assessData = await assessRes.json();
+
+        renderDashboard(assessData.assessments || []);
+
+      } catch (e) {
+        console.error('Init error:', e);
+        localStorage.removeItem('auth_token');
+        window.location.href = '/#login';
+      }
+    }
+
+    function renderDashboard(assessments) {
+      const content = document.getElementById('content');
+
+      if (assessments.length === 0) {
+        content.innerHTML = `
+          <div class="text-center py-20">
+            <div class="text-6xl mb-6">📊</div>
+            <h1 class="text-3xl font-bold text-white mb-4">No Assessments Yet</h1>
+            <p class="text-stone-400 mb-8">Take your first PM skills assessment to see your results here.</p>
+            <a href="/assessment.html" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-8 rounded-lg transition-colors">
+              Start Assessment →
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      const latest = assessments[0];
+      const goalLabels = { exploring: 'Exploring PM', support: 'Supporting Role', job: 'PM Job', pmp: 'PMP Certification', improve: 'Improving' };
+
+      content.innerHTML = `
+        <div class="flex justify-between items-start mb-8">
+          <div>
+            <h1 class="text-3xl font-bold text-white mb-2">My Assessments</h1>
+            <p class="text-stone-400">Track your PM skills progress over time</p>
+          </div>
+          <a href="/assessment.html" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+            New Assessment
+          </a>
+        </div>
+
+        <!-- Latest Assessment Summary -->
+        <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-8">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <div class="text-sm text-stone-400 mb-1">Latest Assessment</div>
+              <div class="text-lg font-bold text-white">${new Date(latest.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+            </div>
+            <div class="text-right">
+              <div class="text-4xl font-black ${latest.overallScore >= 80 ? 'text-emerald-500' : latest.overallScore >= 60 ? 'text-amber-500' : 'text-rose-500'}">${latest.overallScore}%</div>
+              <div class="text-sm text-stone-400">Overall Score</div>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-3 gap-4 pt-4 border-t border-stone-700">
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">${latest.gapCount}</div>
+              <div class="text-xs text-stone-400">Skill Gaps</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">${latest.strengthCount}</div>
+              <div class="text-xs text-stone-400">Strengths</div>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-bold text-white">${goalLabels[latest.objectives.goal] || 'N/A'}</div>
+              <div class="text-xs text-stone-400">Goal</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- All Assessments -->
+        <h2 class="text-xl font-bold text-white mb-4">Assessment History</h2>
+        <div class="space-y-4">
+          ${assessments.map((a, i) => `
+            <div class="bg-stone-800 rounded-xl p-4 border border-stone-700 flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-lg ${a.overallScore >= 80 ? 'bg-emerald-500/20 text-emerald-500' : a.overallScore >= 60 ? 'bg-amber-500/20 text-amber-500' : 'bg-rose-500/20 text-rose-500'} flex items-center justify-center font-bold">
+                  ${a.overallScore}%
+                </div>
+                <div>
+                  <div class="font-medium text-white">${goalLabels[a.objectives.goal] || 'Assessment'}</div>
+                  <div class="text-sm text-stone-400">${new Date(a.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                </div>
+              </div>
+              <div class="text-right">
+                <div class="text-sm text-stone-400">${a.gapCount} gaps • ${a.strengthCount} strengths</div>
+                ${i === 0 ? '<span class="text-xs bg-brand-500/20 text-brand-500 px-2 py-1 rounded mt-1 inline-block">Latest</span>' : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Progress Tips -->
+        <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mt-8">
+          <h3 class="font-bold text-white mb-4">📈 Tips for Progress</h3>
+          <ul class="space-y-2 text-sm text-stone-300">
+            <li>• <strong class="text-white">Retake every 4-6 weeks</strong> to track your improvement</li>
+            <li>• <strong class="text-white">Focus on your top 3 gaps</strong> for maximum impact</li>
+            <li>• <strong class="text-white">Complete the recommended courses</strong> in your roadmap</li>
+            <li>• <strong class="text-white">Practice with simulations</strong> to apply what you learn</li>
+          </ul>
+        </div>
+      `;
+    }
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/';
+    }
+
+    init();
+  </script>
+</body>
+</html>

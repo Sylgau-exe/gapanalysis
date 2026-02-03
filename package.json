@@ -1,0 +1,25 @@
+{
+  "name": "pm-skills-assessment",
+  "version": "1.0.0",
+  "description": "Free PM Skills Assessment Platform - Assess your project management skills and get personalized learning paths",
+  "type": "module",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static build ready'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@vercel/postgres": "^0.5.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "keywords": [
+    "project-management",
+    "skills-assessment",
+    "pmp",
+    "pmbok",
+    "learning-path"
+  ],
+  "author": "Sylvain PMO Consulting",
+  "license": "MIT"
+}

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PM Skills Assessment | Free Project Management Skills Test</title>
+  <meta name="description" content="Assess your project management skills for FREE. Get a personalized learning path with courses, simulations, and tools to accelerate your PM career.">
+  <meta name="keywords" content="project management assessment, PM skills test, PMP preparation, project manager training, PMBOK skills">
+  <link rel="canonical" href="https://pmskillsassess.com">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Free PM Skills Assessment">
+  <meta property="og:description" content="Discover your PM strengths and skill gaps. Get a personalized 12-week development roadmap.">
+  <meta property="og:type" content="website">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#fef3e2', 100: '#fde4bf', 200: '#fbc97f', 300: '#f9a93f', 400: '#f78b14', 500: '#e87308', 600: '#c75706', 700: '#a23d09', 800: '#85310f', 900: '#6e2a10' },
+            stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .gradient-text { background: linear-gradient(135deg, #f78b14 0%, #e87308 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  </style>
+</head>
+<body class="bg-stone-900 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/" class="flex items-center gap-3 text-white font-semibold text-lg">
+        <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center">
+          <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        <span>PM Skills<span class="text-brand-500">Assess</span></span>
+      </a>
+      
+      <nav id="headerNav" class="flex items-center gap-4">
+        <button onclick="showAuth('login')" class="text-stone-300 hover:text-white text-sm font-medium transition-colors">Sign In</button>
+        <button onclick="showAuth('register')" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Get Started Free</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-stone-800 border border-stone-700 rounded-2xl p-8 max-w-md w-full fade-in">
+      <button onclick="hideAuth()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+      
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-white mb-2">Welcome Back</h2>
+          <p class="text-stone-400">Sign in to access your assessments</p>
+        </div>
+        
+        <form onsubmit="handleLogin(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-stone-300 mb-2">Email</label>
+            <input type="email" id="loginEmail" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="you@company.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-stone-300 mb-2">Password</label>
+            <input type="password" id="loginPassword" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+          </div>
+          <div id="loginError" class="text-red-400 text-sm hidden"></div>
+          <button type="submit" id="loginBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-colors">
+            Sign In
+          </button>
+        </form>
+        
+        <p class="text-center text-stone-400 text-sm mt-6">
+          Don't have an account? <button onclick="showAuth('register')" class="text-brand-500 hover:text-brand-400 font-medium">Create one free</button>
+        </p>
+      </div>
+      
+      <!-- Register Form -->
+      <div id="registerForm" style="display: none;">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-white mb-2">Create Free Account</h2>
+          <p class="text-stone-400">Start your PM skills assessment</p>
+        </div>
+        
+        <form onsubmit="handleRegister(event)" class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-stone-300 mb-2">Full Name</label>
+            <input type="text" id="registerName" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="John Smith">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-stone-300 mb-2">Email</label>
+            <input type="email" id="registerEmail" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="you@company.com">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-stone-300 mb-2">Password (8+ characters)</label>
+            <input type="password" id="registerPassword" required minlength="8" class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+          </div>
+          <div id="registerError" class="text-red-400 text-sm hidden"></div>
+          <button type="submit" id="registerBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-colors">
+            Create Account
+          </button>
+        </form>
+        
+        <p class="text-center text-stone-400 text-sm mt-6">
+          Already have an account? <button onclick="showAuth('login')" class="text-brand-500 hover:text-brand-400 font-medium">Sign in</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Hero Section -->
+    <section class="py-20 px-6">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="inline-flex items-center gap-2 bg-brand-500/20 text-brand-400 px-4 py-2 rounded-full text-sm font-medium mb-8">
+          <span>✨</span> 100% Free • No Credit Card Required
+        </div>
+        
+        <h1 class="text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
+          Assess Your <span class="gradient-text">PM Skills</span><br>in 10 Minutes
+        </h1>
+        
+        <p class="text-xl text-stone-300 mb-10 max-w-2xl mx-auto">
+          Discover your strengths and skill gaps across 13 PM knowledge areas. 
+          Get a personalized learning roadmap with courses, simulations, and tools.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <button onclick="startAssessment()" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-8 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg shadow-brand-500/25">
+            Start Free Assessment →
+          </button>
+          <a href="#how-it-works" class="text-stone-300 hover:text-white font-medium py-4 px-8 rounded-xl border border-stone-700 hover:border-stone-500 transition-colors">
+            Learn More
+          </a>
+        </div>
+        
+        <!-- Stats -->
+        <div class="grid grid-cols-3 gap-6 max-w-lg mx-auto">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-white">13</div>
+            <div class="text-sm text-stone-400">Skill Areas</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-white">10</div>
+            <div class="text-sm text-stone-400">Minutes</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-white">1</div>
+            <div class="text-sm text-stone-400">Custom Roadmap</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Skills Covered -->
+    <section class="py-16 px-6 bg-stone-800/50">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="text-3xl font-bold text-white text-center mb-4">13 Essential PM Skills Assessed</h2>
+        <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Aligned with PMBOK and industry standards</p>
+        
+        <div class="grid md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">📋</div>
+            <div class="font-medium text-white text-sm">PM Basics</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">🔄</div>
+            <div class="font-medium text-white text-sm">Agile Methods</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">🎯</div>
+            <div class="font-medium text-white text-sm">Product Mgmt</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">🚀</div>
+            <div class="font-medium text-white text-sm">Initiation</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">📐</div>
+            <div class="font-medium text-white text-sm">Scope</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">⏱️</div>
+            <div class="font-medium text-white text-sm">Time</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">💰</div>
+            <div class="font-medium text-white text-sm">Cost</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">✅</div>
+            <div class="font-medium text-white text-sm">Quality</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">👥</div>
+            <div class="font-medium text-white text-sm">Resources</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">💬</div>
+            <div class="font-medium text-white text-sm">Communication</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">⚠️</div>
+            <div class="font-medium text-white text-sm">Risk</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">🤝</div>
+            <div class="font-medium text-white text-sm">Procurement</div>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-4 border border-stone-700">
+            <div class="text-2xl mb-2">🎭</div>
+            <div class="font-medium text-white text-sm">Leadership</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works -->
+    <section id="how-it-works" class="py-20 px-6">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold text-white text-center mb-4">How It Works</h2>
+        <p class="text-stone-400 text-center mb-12">Three simple steps to your personalized development plan</p>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">1️⃣</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Self-Assess</h3>
+            <p class="text-stone-400">Rate your proficiency in 13 PM skill areas using detailed rubrics</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">2️⃣</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Get Your Report</h3>
+            <p class="text-stone-400">See your strengths, gaps, and overall PM readiness score</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <span class="text-3xl">3️⃣</span>
+            </div>
+            <h3 class="text-xl font-bold text-white mb-2">Follow Your Roadmap</h3>
+            <p class="text-stone-400">Access curated courses, simulations, and tools for your goals</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Goals Section -->
+    <section class="py-16 px-6 bg-stone-800/50">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl font-bold text-white mb-4">Perfect For Any PM Goal</h2>
+        <p class="text-stone-400 mb-12">Whether you're just starting or looking to advance</p>
+        
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 text-left">
+            <div class="text-3xl mb-3">🔍</div>
+            <h3 class="font-bold text-white mb-2">Exploring PM</h3>
+            <p class="text-stone-400 text-sm">Discover if project management is right for you</p>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 text-left">
+            <div class="text-3xl mb-3">💼</div>
+            <h3 class="font-bold text-white mb-2">Getting a PM Job</h3>
+            <p class="text-stone-400 text-sm">Build job-ready skills and ace interviews</p>
+          </div>
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 text-left">
+            <div class="text-3xl mb-3">🎓</div>
+            <h3 class="font-bold text-white mb-2">PMP Certification</h3>
+            <p class="text-stone-400 text-sm">Prepare for the PMP exam with confidence</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20 px-6">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-4xl font-bold text-white mb-4">Ready to Level Up?</h2>
+        <p class="text-xl text-stone-300 mb-8">Join thousands of project managers who've discovered their path to PM excellence.</p>
+        
+        <button onclick="startAssessment()" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-12 rounded-xl text-lg transition-all transform hover:scale-105 shadow-lg shadow-brand-500/25">
+          Start Your Free Assessment →
+        </button>
+        
+        <p class="text-stone-500 text-sm mt-4">Free forever • Results in 10 minutes • Downloadable PDF report</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-stone-800 py-12 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <span class="text-white font-semibold">PM SkillsAssess</span>
+        </div>
+        
+        <div class="text-stone-500 text-sm">
+          © 2024 PM SkillsAssess. A product of <a href="https://sylvainpmoconsulting.com" class="text-brand-500 hover:text-brand-400">Sylvain PMO Consulting</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let currentUser = null;
+
+    // Check auth on load
+    async function checkAuth() {
+      const token = localStorage.getItem('auth_token');
+      if (!token) return;
+      
+      try {
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentUser = data.user;
+          updateHeaderForUser();
+        } else {
+          localStorage.removeItem('auth_token');
+        }
+      } catch (e) {
+        console.error('Auth check failed:', e);
+      }
+    }
+
+    function updateHeaderForUser() {
+      document.getElementById('headerNav').innerHTML = `
+        <span class="text-stone-400 text-sm">Hi, <span class="text-white font-medium">${currentUser.name}</span></span>
+        ${currentUser.isAdmin ? '<a href="/admin.html" class="text-brand-500 hover:text-brand-400 text-sm font-medium">Admin</a>' : ''}
+        <a href="/dashboard.html" class="text-stone-300 hover:text-white text-sm font-medium">My Assessments</a>
+        <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Logout</button>
+      `;
+    }
+
+    function showAuth(type) {
+      document.getElementById('authModal').style.display = 'flex';
+      document.getElementById('loginForm').style.display = type === 'login' ? 'block' : 'none';
+      document.getElementById('registerForm').style.display = type === 'register' ? 'block' : 'none';
+      document.getElementById('loginError').classList.add('hidden');
+      document.getElementById('registerError').classList.add('hidden');
+    }
+
+    function hideAuth() {
+      document.getElementById('authModal').style.display = 'none';
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const error = document.getElementById('loginError');
+      
+      btn.disabled = true;
+      btn.textContent = 'Signing in...';
+      error.classList.add('hidden');
+      
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Login failed');
+        }
+        
+        localStorage.setItem('auth_token', data.token);
+        currentUser = data.user;
+        hideAuth();
+        updateHeaderForUser();
+        
+        // Redirect to assessment if that was the intent
+        const redirect = localStorage.getItem('redirect_after_auth');
+        if (redirect) {
+          localStorage.removeItem('redirect_after_auth');
+          window.location.href = redirect;
+        }
+        
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sign In';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      const error = document.getElementById('registerError');
+      
+      btn.disabled = true;
+      btn.textContent = 'Creating account...';
+      error.classList.add('hidden');
+      
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('registerName').value,
+            email: document.getElementById('registerEmail').value,
+            password: document.getElementById('registerPassword').value
+          })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+          throw new Error(data.error || 'Registration failed');
+        }
+        
+        localStorage.setItem('auth_token', data.token);
+        currentUser = data.user;
+        hideAuth();
+        updateHeaderForUser();
+        
+        // Redirect to assessment
+        window.location.href = '/assessment.html';
+        
+      } catch (err) {
+        error.textContent = err.message;
+        error.classList.remove('hidden');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Create Account';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      currentUser = null;
+      window.location.reload();
+    }
+
+    function startAssessment() {
+      if (currentUser) {
+        window.location.href = '/assessment.html';
+      } else {
+        localStorage.setItem('redirect_after_auth', '/assessment.html');
+        showAuth('register');
+      }
+    }
+
+    // Handle hash-based auth triggers
+    function handleHashAuth() {
+      const hash = window.location.hash;
+      if (hash === '#login') showAuth('login');
+      if (hash === '#register') showAuth('register');
+    }
+
+    // Init
+    checkAuth();
+    handleHashAuth();
+    window.addEventListener('hashchange', handleHashAuth);
+  </script>
+</body>
+</html>
