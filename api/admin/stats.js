@@ -1,83 +1,26 @@
+// api/admin/stats.js - Admin dashboard statistics
 import { sql } from '@vercel/postgres';
-import { requireAdmin } from '../../lib/auth.js';
+import { getUserFromRequest, cors } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
+  cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const decoded = await requireAdmin(req, res, sql);
-  if (!decoded) return;
+  const decoded = getUserFromRequest(req);
+  if (!decoded) return res.status(401).json({ error: 'Authentication required' });
+
+  const adminCheck = await sql`SELECT is_admin FROM users WHERE id = ${decoded.userId}`;
+  if (!adminCheck.rows[0]?.is_admin) return res.status(403).json({ error: 'Admin access required' });
 
   try {
-    // Overall stats
     const userCount = await sql`SELECT COUNT(*) as count FROM users`;
     const assessmentCount = await sql`SELECT COUNT(*) as count FROM assessment_results`;
     const leadCount = await sql`SELECT COUNT(*) as count FROM partner_leads`;
-    
-    // Stats for last 7 days
-    const newUsers7d = await sql`
-      SELECT COUNT(*) as count FROM users 
-      WHERE created_at > NOW() - INTERVAL '7 days'
-    `;
-    const assessments7d = await sql`
-      SELECT COUNT(*) as count FROM assessment_results 
-      WHERE completed_at > NOW() - INTERVAL '7 days'
-    `;
-    const leads7d = await sql`
-      SELECT COUNT(*) as count FROM partner_leads 
-      WHERE clicked_at > NOW() - INTERVAL '7 days'
-    `;
-    
-    // Average scores
-    const avgScores = await sql`
-      SELECT 
-        ROUND(AVG(overall_score)::numeric, 1) as avg_overall,
-        ROUND(AVG(gap_count)::numeric, 1) as avg_gaps
-      FROM assessment_results
-    `;
-    
-    // Goal distribution
-    const goalDist = await sql`
-      SELECT goal, COUNT(*) as count
-      FROM assessment_results
-      WHERE goal IS NOT NULL
-      GROUP BY goal
-      ORDER BY count DESC
-    `;
-    
-    // Partner leads breakdown
-    const partnerBreakdown = await sql`
-      SELECT partner_code, COUNT(*) as count
-      FROM partner_leads
-      GROUP BY partner_code
-      ORDER BY count DESC
-    `;
-    
-    // Recent assessments
-    const recentAssessments = await sql`
-      SELECT 
-        ar.id, ar.profile_name, ar.profile_organization, ar.overall_score, 
-        ar.goal, ar.completed_at,
-        u.email
-      FROM assessment_results ar
-      JOIN users u ON ar.user_id = u.id
-      ORDER BY ar.completed_at DESC
-      LIMIT 20
-    `;
-    
-    // Recent signups
-    const recentUsers = await sql`
-      SELECT id, email, name, organization, created_at
-      FROM users
-      ORDER BY created_at DESC
-      LIMIT 20
-    `;
+    const newUsers7d = await sql`SELECT COUNT(*) as count FROM users WHERE created_at > NOW() - INTERVAL '7 days'`;
+    const assessments7d = await sql`SELECT COUNT(*) as count FROM assessment_results WHERE completed_at > NOW() - INTERVAL '7 days'`;
+    const avgScores = await sql`SELECT ROUND(AVG(overall_score)::numeric, 1) as avg_overall, ROUND(AVG(gap_count)::numeric, 1) as avg_gaps FROM assessment_results`;
+    const goalDist = await sql`SELECT goal, COUNT(*) as count FROM assessment_results WHERE goal IS NOT NULL GROUP BY goal ORDER BY count DESC`;
 
     return res.status(200).json({
       overview: {
@@ -89,17 +32,12 @@ export default async function handler(req, res) {
       },
       last7Days: {
         newUsers: parseInt(newUsers7d.rows[0].count),
-        assessments: parseInt(assessments7d.rows[0].count),
-        leads: parseInt(leads7d.rows[0].count)
+        assessments: parseInt(assessments7d.rows[0].count)
       },
-      goalDistribution: goalDist.rows,
-      partnerBreakdown: partnerBreakdown.rows,
-      recentAssessments: recentAssessments.rows,
-      recentUsers: recentUsers.rows
+      goalDistribution: goalDist.rows
     });
-
   } catch (error) {
     console.error('Admin stats error:', error);
-    return res.status(500).json({ error: 'Failed to fetch admin stats' });
+    return res.status(500).json({ error: 'Failed to fetch stats' });
   }
 }
