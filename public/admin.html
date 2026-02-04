@@ -223,7 +223,7 @@
     async function loadStats() {
       try {
         const res = await fetch('/api/admin/stats', { headers: headers() });
-        if (!res.ok) return;
+        if (!res.ok) { console.error('Stats API error:', res.status, await res.text()); return; }
         const data = await res.json();
         animateCounter('statUsers', data.overview.totalUsers);
         animateCounter('statAssessments', data.overview.totalAssessments);
@@ -232,11 +232,12 @@
         document.getElementById('statUsers7d').textContent = `↑ ${data.last7Days.newUsers} this week`;
         document.getElementById('statAssessments7d').textContent = `↑ ${data.last7Days.assessments} this week`;
         document.getElementById('statAvgGaps').textContent = `~${data.overview.avgGapCount} avg gaps`;
-      } catch (e) { console.error('Stats error:', e); }
+      } catch (e) { console.error('Stats fetch error:', e); }
     }
 
     function animateCounter(id, target) {
       const el = document.getElementById(id);
+      if (target === 0 || isNaN(target)) { el.textContent = '0'; return; }
       const duration = 800;
       const start = performance.now();
       function update(now) {
