@@ -1,64 +1,34 @@
-import { sql } from '@vercel/postgres';
+// api/auth/login.js (adapted to use db.js like BizSimHub)
+import { UserDB } from '../../lib/db.js';
+import { generateToken, cors } from '../../lib/auth.js';
 import bcrypt from 'bcryptjs';
-import { createToken } from '../../lib/auth.js';
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
+  cors(res);
   if (req.method === 'OPTIONS') return res.status(200).end();
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
+  if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
   try {
-    const result = await sql`
-      SELECT id, email, name, password_hash, organization, job_title, is_admin, email_verified
-      FROM users 
-      WHERE email = ${email.toLowerCase()}
-    `;
+    const user = await UserDB.findByEmail(email.toLowerCase());
+    if (!user) return res.status(401).json({ error: 'Invalid email or password' });
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+    if (user.auth_provider === 'google' && !user.password_hash) {
+      return res.status(401).json({ error: 'This account uses Google Sign-In. Please use the Google button.' });
     }
-
-    const user = result.rows[0];
 
     const valid = await bcrypt.compare(password, user.password_hash);
-    if (!valid) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
+    if (!valid) return res.status(401).json({ error: 'Invalid email or password' });
 
-    // Update last login
-    await sql`UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = ${user.id}`;
-
-    const token = createToken({
-      userId: user.id,
-      email: user.email,
-      name: user.name
-    });
-
+    const token = generateToken(user);
     return res.status(200).json({
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        organization: user.organization,
-        jobTitle: user.job_title,
-        isAdmin: user.is_admin
-      },
-      token
+      token,
+      user: { id: user.id, email: user.email, name: user.name, isAdmin: user.is_admin }
     });
-
   } catch (error) {
     console.error('Login error:', error);
-    return res.status(500).json({ error: 'Login failed. Please try again.' });
+    return res.status(500).json({ error: 'Login failed' });
   }
 }

@@ -6,18 +6,39 @@ CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255),
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255),
   organization VARCHAR(255),
   job_title VARCHAR(255),
   experience_level VARCHAR(50),
   is_admin BOOLEAN DEFAULT false,
   email_verified BOOLEAN DEFAULT false,
   verification_token VARCHAR(255),
+  google_id VARCHAR(255),
+  auth_provider VARCHAR(50) DEFAULT 'email',
   reset_token VARCHAR(255),
   reset_token_expires TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add columns if upgrading from previous schema
+DO $$ 
+BEGIN 
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='google_id') THEN
+    ALTER TABLE users ADD COLUMN google_id VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='auth_provider') THEN
+    ALTER TABLE users ADD COLUMN auth_provider VARCHAR(50) DEFAULT 'email';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='reset_token') THEN
+    ALTER TABLE users ADD COLUMN reset_token VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='reset_token_expires') THEN
+    ALTER TABLE users ADD COLUMN reset_token_expires TIMESTAMP;
+  END IF;
+  -- Make password_hash nullable for Google OAuth users
+  ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+END $$;
 
 -- Assessment results table
 CREATE TABLE IF NOT EXISTS assessment_results (
