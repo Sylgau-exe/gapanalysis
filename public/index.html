@@ -349,6 +349,7 @@
 
     function updateHeaderForUser() {
       document.getElementById('headerNav').innerHTML = `
+        <a href="/index-fr.html" class="text-stone-500 hover:text-white text-sm font-medium">FR</a>
         <span class="text-stone-400 text-sm">Hi, <span class="text-white font-medium">${currentUser.name}</span></span>
         ${currentUser.isAdmin ? '<a href="/admin.html" class="text-brand-500 hover:text-brand-400 text-sm font-medium">Admin</a>' : ''}
         <a href="/dashboard.html" class="text-stone-300 hover:text-white text-sm font-medium">My Assessments</a>
