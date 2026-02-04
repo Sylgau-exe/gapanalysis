@@ -1,0 +1,1369 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Évaluation des compétences GP | Passez le test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#fef3e2', 100: '#fde4bf', 200: '#fbc97f', 300: '#f9a93f', 400: '#f78b14', 500: '#e87308', 600: '#c75706', 700: '#a23d09', 800: '#85310f', 900: '#6e2a10' },
+            stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-stone-900 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/index-fr.html" class="flex items-center gap-3 text-white font-semibold text-lg">
+        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        Compétences<span class="text-brand-500">GP</span>
+      </a>
+      <div id="headerUserInfo" class="flex items-center gap-4">
+        <a href="/assessment.html" class="text-stone-400 hover:text-white text-sm">EN</a>
+        <a href="/index-fr.html" class="text-stone-400 hover:text-white text-sm transition-colors">← Retour</a>
+      </div>
+    </div>
+  </header>
+  
+  <!-- Auth Required Modal -->
+  <div id="authModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" style="display: none;">
+    <div class="bg-stone-800 border border-stone-700 rounded-2xl p-8 max-w-md w-full">
+      <div class="text-center mb-6">
+        <div class="text-5xl mb-4">🔐</div>
+        <h2 class="text-2xl font-bold text-white mb-2">Compte gratuit requis</h2>
+        <p class="text-stone-300">Créez un compte gratuit pour passer l'évaluation et sauvegarder vos résultats.</p>
+      </div>
+      <div class="space-y-3">
+        <a href="/index-fr.html#register" onclick="localStorage.setItem('redirect_after_auth', '/assessment-fr.html')" class="block w-full py-3 px-6 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg text-center transition-colors">
+          Créer un compte gratuit
+        </a>
+        <a href="/index-fr.html#login" onclick="localStorage.setItem('redirect_after_auth', '/assessment-fr.html')" class="block w-full py-3 px-6 bg-stone-700 hover:bg-stone-600 text-white font-bold rounded-lg text-center transition-colors">
+          Se connecter
+        </a>
+      </div>
+      <p class="text-center text-stone-500 text-sm mt-6">Gratuit pour toujours • Aucune carte de crédit</p>
+    </div>
+  </div>
+  
+  <div id="app"></div>
+
+  <script>
+    // Auth check
+    let currentUser = null;
+    let assessmentId = null;
+    const authToken = localStorage.getItem('auth_token');
+    
+    async function checkAuth() {
+      if (!authToken) {
+        document.getElementById('authModal').style.display = 'flex';
+        return false;
+      }
+      try {
+        const response = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!response.ok) throw new Error('Non authentifié');
+        const data = await response.json();
+        currentUser = data.user;
+        document.getElementById('headerUserInfo').innerHTML = `
+          <a href="/assessment.html" class="text-stone-400 hover:text-white text-sm">EN</a>
+          <span class="text-stone-400 text-sm">Bonjour, <span class="text-white font-medium">${currentUser.name}</span></span>
+          <a href="/dashboard-fr.html" class="text-stone-400 hover:text-white text-sm transition-colors">Mes évaluations</a>
+        `;
+        if (currentUser.name && !state.profile.name) {
+          state.profile.name = currentUser.name;
+        }
+        return true;
+      } catch (e) {
+        localStorage.removeItem('auth_token');
+        document.getElementById('authModal').style.display = 'flex';
+        return false;
+      }
+    }
+    
+    // State management
+    const state = {
+      currentStep: 'welcome',
+      profile: { name: '', title: '', organization: '', experience: '', certifications: [] },
+      objectives: { goal: '', timeline: '12', learningStyle: 'balanced' },
+      scores: {},
+      expandedSkill: null,
+      isGenerating: false
+    };
+
+    // ========== DOMAINES DE COMPÉTENCES AVEC GRILLES D'ÉVALUATION ==========
+    const SKILL_AREAS = [
+      { 
+        id: 'basics', name: 'Fondamentaux GP', description: 'Définitions, standards, cycle de vie projet',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je suis nouveau dans les concepts de gestion de projet", "Je ne peux pas définir ce qu'est un projet vs les opérations", "Je ne connais pas la différence entre projet, programme et portefeuille"] },
+          2: { label: 'Débutant', criteria: ["Je comprends ce qu'est un projet (temporaire, livrable unique)", "J'ai entendu parler de PMI/PMBOK mais je ne l'ai pas étudié", "Je sais que les projets ont des phases mais je ne peux pas les nommer"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux expliquer les 5 groupes de processus (Démarrage, Planification, Exécution, S&C, Clôture)", "Je comprends la triple contrainte (contenu, délais, coûts)", "Je sais ce qu'est un BGP et ses fonctions de base"] },
+          4: { label: 'Compétent', criteria: ["Je peux appliquer les domaines de connaissance PMBOK dans de vrais projets", "Je comprends les différentes méthodologies GP et quand les utiliser", "Je peux expliquer les critères de succès d'un projet aux parties prenantes"] },
+          5: { label: 'Expert', criteria: ["Je peux concevoir des cadres GP pour des organisations", "Je mentor d'autres personnes sur les fondamentaux GP", "Je contribue aux standards GP ou j'ai publié du contenu GP"] }
+        }
+      },
+      { 
+        id: 'agile', name: 'Méthodes Agile pour GP', description: "Comprendre les approches agiles pour gérer ou travailler avec des équipes agiles",
+        rubric: {
+          1: { label: 'Novice', criteria: ["J'ai entendu parler d'Agile mais je ne comprends pas comment ça diffère du GP traditionnel", "Je ne sais pas ce qu'est un sprint ou une itération", "Je n'ai jamais travaillé avec ou géré une équipe Agile"] },
+          2: { label: 'Débutant', criteria: ["Je comprends les valeurs Agile et les bases du Manifeste Agile", "Je sais que Scrum a des rôles comme Product Owner et Scrum Master", "J'ai participé à des mêlées quotidiennes ou des revues de sprint"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux expliquer quand utiliser Agile vs Cascade", "Je comprends la vélocité, les points d'effort et les graphiques d'avancement", "Je peux travailler efficacement avec des équipes Agile en tant que GP"] },
+          4: { label: 'Compétent', criteria: ["Je peux gérer des projets hybrides (Agile + Cascade)", "J'intègre les équipes Agile dans la gouvernance projet traditionnelle", "Je sais quand recommander une approche Agile vs prédictive"] },
+          5: { label: 'Expert', criteria: ["Je peux concevoir des cadres hybrides pour des organisations", "Je conseille la direction sur la transformation Agile d'une perspective GP", "Je forme des GP sur le travail avec les méthodologies Agile"] }
+        }
+      },
+      { 
+        id: 'product', name: 'Gestion de produit', description: 'Vision, feuilles de route, analyses de rentabilité',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne connais pas la différence entre gestion de projet et gestion de produit", "Je n'ai jamais créé d'analyse de rentabilité", "Je ne sais pas ce qu'est une feuille de route produit"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que les produits ont des cycles de vie", "Je peux contribuer à une analyse de rentabilité avec guidance", "J'ai vu des feuilles de route produit mais je n'en ai pas créé"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux créer un énoncé de vision produit de base", "Je peux construire une analyse de rentabilité avec analyse de ROI", "Je comprends les concepts d'adéquation produit-marché"] },
+          4: { label: 'Compétent', criteria: ["Je peux développer et maintenir des feuilles de route produit", "Je prends des décisions de priorisation basées sur les données", "Je travaille efficacement avec les propriétaires de produit et parties prenantes"] },
+          5: { label: 'Expert', criteria: ["J'ai lancé plusieurs produits avec succès", "Je peux définir une stratégie produit alignée aux objectifs d'affaires", "Je mentor des gestionnaires de produit"] }
+        }
+      },
+      { 
+        id: 'initiation', name: 'Démarrage de projet', description: 'Charte, parties prenantes, lancement',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne sais pas ce qu'est une charte de projet", "Je n'ai jamais identifié formellement les parties prenantes d'un projet", "Je n'ai jamais dirigé ou organisé un lancement de projet"] },
+          2: { label: 'Débutant', criteria: ["Je comprends pourquoi nous avons besoin d'une charte de projet", "Je peux lister les parties prenantes évidentes (commanditaire, équipe, client)", "J'ai participé à des réunions de lancement"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux rédiger une charte de projet avec objectifs et contraintes", "J'utilise des outils d'analyse des parties prenantes (grille pouvoir/intérêt)", "Je peux planifier et animer une réunion de lancement efficace"] },
+          4: { label: 'Compétent', criteria: ["Je crée des chartes qui obtiennent rapidement l'adhésion du commanditaire", "J'identifie proactivement les parties prenantes cachées et leurs besoins", "J'adapte les activités de démarrage à la taille et au type de projet"] },
+          5: { label: 'Expert', criteria: ["J'ai standardisé les processus de démarrage pour des organisations", "Je coach d'autres sur les stratégies de gestion des parties prenantes", "Je peux démarrer des programmes complexes multi-parties prenantes"] }
+        }
+      },
+      { 
+        id: 'scope', name: 'Gestion du contenu', description: 'SDP, exigences, contrôle du contenu',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne sais pas ce qu'est une SDP (Structure de Découpage du Projet)", "J'ai du mal à définir des exigences projet claires", "J'ai vécu la dérive du contenu mais je ne savais pas comment la prévenir"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que la SDP décompose le travail en éléments gérables", "Je peux documenter des exigences de base avec guidance", "Je sais que la dérive du contenu est mauvaise mais je ne sais pas comment la contrôler"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux créer une SDP en suivant la règle des 100%", "Je recueille les exigences via entrevues et ateliers", "J'utilise le contrôle des changements pour gérer les modifications de contenu"] },
+          4: { label: 'Compétent', criteria: ["Je crée des dictionnaires de SDP détaillés pour des projets complexes", "J'anime des sessions JAD et utilise plusieurs techniques d'élicitation", "Je dis efficacement 'non' à la dérive tout en maintenant les relations"] },
+          5: { label: 'Expert', criteria: ["Je conçois des cadres de gestion du contenu pour des organisations", "Je gère des exigences très ambiguës dans des projets innovants", "Je forme d'autres sur l'ingénierie des exigences et la création de SDP"] }
+        }
+      },
+      { 
+        id: 'time', name: 'Gestion du temps', description: 'Échéancier, chemin critique, dépendances',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne sais pas comment créer un échéancier de projet", "Je n'ai jamais entendu parler du chemin critique ou des dépendances", "J'ai du mal à estimer combien de temps les tâches prendront"] },
+          2: { label: 'Débutant', criteria: ["Je peux créer une simple liste de tâches avec des dates", "Je comprends que les tâches peuvent dépendre les unes des autres", "J'ai utilisé des diagrammes de Gantt mais je ne les ai pas créés moi-même"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux construire un diagramme de Gantt avec dépendances (FD, DD, FF, DF)", "Je comprends et peux calculer le chemin critique", "J'utilise l'estimation à 3 points pour des durées plus précises"] },
+          4: { label: 'Compétent', criteria: ["Je peux compresser ou chevaucher des échéanciers au besoin", "J'effectue le nivellement des ressources pour optimiser les affectations", "J'identifie proactivement les risques d'échéancier et construis des tampons"] },
+          5: { label: 'Expert', criteria: ["J'utilise la simulation Monte Carlo pour l'analyse des risques d'échéancier", "J'ai géré des échéanciers pour des programmes de 100+ activités", "J'optimise les échéanciers à travers plusieurs projets (niveau portefeuille)"] }
+        }
+      },
+      { 
+        id: 'cost', name: 'Gestion des coûts', description: 'Budget, valeur acquise, prévisions',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je n'ai jamais créé ou géré un budget de projet", "Je ne sais pas ce qu'est la Gestion de la Valeur Acquise (GVA)", "Je ne peux pas expliquer la différence entre les types d'estimations"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que les projets ont besoin de budgets avec contingence", "J'ai entendu parler des métriques GVA comme IPC et IPD", "Je peux suivre les coûts réels vs budget à un niveau de base"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux créer une estimation de coûts ascendante", "Je peux calculer les métriques GVA (VP, VA, CR, ÉD, ÉC, IPD, IPC)", "Je produis des rapports de coûts et des explications des écarts"] },
+          4: { label: 'Compétent', criteria: ["Je prévois les coûts finaux en utilisant les formules de CAF", "Je gère des budgets projet de plus de 500K$ avec confiance", "J'utilise les données de coûts pour prendre des décisions de ressources et de contenu"] },
+          5: { label: 'Expert', criteria: ["J'ai géré des budgets de plus de 5M$ avec financement complexe", "Je conçois des systèmes de gestion des coûts pour des organisations", "Je forme d'autres sur la GVA et les contrôles financiers de projet"] }
+        }
+      },
+      { 
+        id: 'quality', name: 'Gestion de la qualité', description: 'AQ/CQ, coût de la qualité, normes',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne connais pas la différence entre AQ et CQ", "Je n'ai jamais créé de plan qualité", "Je ne connais pas les outils qualité (Pareto, Ishikawa, etc.)"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que l'AQ prévient les défauts, le CQ les détecte", "Je sais que les tests font partie du contrôle qualité", "J'ai participé à des revues qualité"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux créer un plan de gestion de la qualité", "J'utilise des outils qualité comme les listes de contrôle et les cartes de contrôle", "Je comprends le coût de la qualité (prévention vs coûts de défaillance)"] },
+          4: { label: 'Compétent', criteria: ["Je conçois des métriques qualité et des critères d'acceptation", "Je dirige des audits qualité et des initiatives d'amélioration continue", "J'équilibre les coûts qualité avec les contraintes du projet"] },
+          5: { label: 'Expert', criteria: ["J'implante des cadres qualité (Six Sigma, TQM) au niveau organisationnel", "Je suis certifié en méthodologies qualité (Ceinture Noire Six Sigma)", "Je forme d'autres sur les pratiques de gestion de la qualité"] }
+        }
+      },
+      { 
+        id: 'resources', name: 'Gestion des ressources', description: "Constitution d'équipe, RACI, allocation",
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je n'ai jamais constitué ou dirigé une équipe projet", "Je ne sais pas ce qu'est une matrice RACI", "J'ai du mal à estimer les besoins en ressources"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que les équipes ont besoin de rôles et responsabilités clairs", "Je sais que RACI signifie Responsable, Imputable, Consulté, Informé", "Je peux demander des ressources mais je ne gère pas la capacité"] },
+          3: { label: 'Intermédiaire', criteria: ["Je crée des matrices RACI pour les livrables du projet", "J'estime les besoins en ressources et crée des calendriers de ressources", "Je gère les conflits d'équipe de base et les problèmes de motivation"] },
+          4: { label: 'Compétent', criteria: ["Je constitue des équipes performantes à travers les fonctions", "Je gère les conflits de ressources entre plusieurs projets", "Je développe les membres de l'équipe et conduis les évaluations de performance"] },
+          5: { label: 'Expert', criteria: ["Je conçois des processus de gestion des ressources pour les BGP", "Je gère efficacement des organisations matricielles complexes", "Je coach d'autres GP sur le développement d'équipe et le leadership"] }
+        }
+      },
+      { 
+        id: 'communication', name: 'Communication', description: 'Plans, rapports, réunions',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je n'ai jamais créé de plan de communication", "J'ai du mal à rédiger des rapports d'avancement clairs", "Je n'adapte pas ma communication aux différents publics"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que différentes parties prenantes ont besoin d'informations différentes", "Je peux rédiger un rapport d'avancement de base", "Je participe aux réunions projet mais je ne les dirige pas"] },
+          3: { label: 'Intermédiaire', criteria: ["Je crée des plans de communication selon les besoins des parties prenantes", "Je rédige des résumés exécutifs et des rapports détaillés", "J'anime des réunions projet efficaces avec ordres du jour"] },
+          4: { label: 'Compétent', criteria: ["J'adapte mon style pour les exécutifs, l'équipe et les clients", "Je livre les messages difficiles de façon professionnelle", "J'utilise des tableaux de bord et visuels pour communiquer l'avancement"] },
+          5: { label: 'Expert', criteria: ["Je présente régulièrement à la haute direction et aux CA", "Je coach d'autres sur la communication avec les parties prenantes", "Je conçois des cadres de communication pour les programmes"] }
+        }
+      },
+      { 
+        id: 'risk', name: 'Gestion des risques', description: 'Identification, analyse, réponse',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je ne pense pas proactivement à ce qui pourrait mal tourner", "Je n'ai jamais créé de registre des risques", "Je réagis aux problèmes plutôt que de les anticiper"] },
+          2: { label: 'Débutant', criteria: ["Je comprends que les risques ont une probabilité et un impact", "Je peux lister les risques projet évidents", "Je sais qu'on devrait avoir des plans de contingence"] },
+          3: { label: 'Intermédiaire', criteria: ["J'anime des ateliers d'identification des risques", "Je note les risques et les priorise avec une matrice de risques", "Je crée des stratégies de réponse (éviter, transférer, atténuer, accepter)"] },
+          4: { label: 'Compétent', criteria: ["Je quantifie les risques en utilisant la valeur monétaire attendue (VME)", "Je gère les réserves pour risques et les conditions de déclenchement", "J'identifie les risques secondaires et les risques résiduels"] },
+          5: { label: 'Expert', criteria: ["J'utilise la simulation Monte Carlo pour l'analyse des risques", "Je conçois des cadres de gestion des risques pour des organisations", "Je gère les risques d'entreprise à travers les portefeuilles"] }
+        }
+      },
+      { 
+        id: 'procurement', name: 'Approvisionnement', description: 'Contrats, fournisseurs, négociation',
+        rubric: {
+          1: { label: 'Novice', criteria: ["Je n'ai jamais travaillé avec des fournisseurs ou des contrats", "Je ne connais pas la différence entre AO, DAI et DI", "Je ne comprends pas les types de contrats (prix fixe, T&M)"] },
+          2: { label: 'Débutant', criteria: ["Je comprends qu'on a besoin de contrats pour le travail externe", "Je peux expliquer les bases prix fixe vs temps et matériel", "J'ai participé à une sélection de fournisseur mais je ne l'ai pas dirigée"] },
+          3: { label: 'Intermédiaire', criteria: ["Je peux rédiger un AO et évaluer les propositions des fournisseurs", "Je comprends quand utiliser différents types de contrats", "Je gère les relations fournisseurs et suis les livrables"] },
+          4: { label: 'Compétent', criteria: ["Je négocie des contrats et obtiens des conditions favorables", "Je gère des relations fournisseurs complexes et les différends", "Je gère les modifications de contrat et les réclamations professionnellement"] },
+          5: { label: 'Expert', criteria: ["Je conçois des stratégies d'approvisionnement pour de grands programmes", "J'ai géré des contrats fournisseurs de plus de 1M$", "Je forme d'autres sur l'approvisionnement et la négociation"] }
+        }
+      },
+      { 
+        id: 'softskills', name: 'Leadership & compétences relationnelles', description: 'Influence, conflit, motivation',
+        rubric: {
+          1: { label: 'Novice', criteria: ["J'évite les conflits plutôt que de les aborder", "J'ai du mal à influencer sans autorité formelle", "Je n'ai jamais dirigé d'équipes"] },
+          2: { label: 'Débutant', criteria: ["Je peux avoir des conversations difficiles avec du soutien", "Je comprends que différents styles de leadership existent", "Je me motive mais j'ai du mal à motiver les autres"] },
+          3: { label: 'Intermédiaire', criteria: ["J'aborde les conflits de façon constructive et trouve des solutions", "J'influence les parties prenantes en utilisant données et relations", "J'adapte mon style de leadership à la situation"] },
+          4: { label: 'Compétent', criteria: ["Je navigue efficacement la politique organisationnelle", "Je bâtis rapidement la confiance avec de nouvelles parties prenantes", "Je coach et développe proactivement les membres de l'équipe"] },
+          5: { label: 'Expert', criteria: ["On me consulte pour résoudre des conflits organisationnels complexes", "J'influence les cadres supérieurs et conduis le changement", "Je mentor d'autres gestionnaires de projet sur le leadership"] }
+        }
+      }
+    ];
+
+    const STEPS = ['welcome', 'profile', 'objectives', 'assessment', 'results'];
+
+    // ========== RESSOURCES PARTENAIRES - CONFIGURABLE ==========
+    const PARTNER_RESOURCES = {
+      thinkific: { name: 'Cours Executive Producer', url: 'https://the-executive-producer.thinkific.com', code: 'thinkific' },
+      bizsimhub: { name: 'BizSimHub', url: 'https://simulations-six.vercel.app', code: 'bizsimhub' },
+      pmtools: { name: 'ProjectManagerTool', url: 'https://projectmanagertool.com', code: 'pmtools' },
+      mcgill: { name: 'McGill Formation continue', url: 'https://www.mcgill.ca/continuingstudies/', code: 'mcgill' },
+      youtube: { name: 'YouTube', url: 'https://youtube.com', code: 'youtube' }
+    };
+
+    const RESOURCE_MAP = {
+      basics: {
+        courses: [
+          { title: 'Fondamentaux GP', duration: '13 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' },
+          { title: 'Certificat en gestion de projet', duration: '45 hrs', platform: 'McGill SCS', url: 'https://www.mcgill.ca/continuingstudies/fr/program/gestion-de-projet', partner: 'mcgill' }
+        ],
+        simulations: [],
+        tools: [{ title: 'CharterPro', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url, partner: 'pmtools' }],
+        free: [{ title: "C'est quoi la gestion de projet?", duration: '15 min', platform: 'YouTube', url: 'https://www.youtube.com/results?search_query=gestion+de+projet+bases', partner: 'youtube' }]
+      },
+      agile: {
+        courses: [{ title: 'Agile & GP Hybride', duration: '3.5 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Startup Tech', duration: '45 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [],
+        free: [{ title: 'Scrum en 10 minutes', duration: '10 min', platform: 'YouTube', url: 'https://www.youtube.com/results?search_query=scrum+expliqué', partner: 'youtube' }]
+      },
+      product: {
+        courses: [{ title: 'Produit, Ressources & Approvisionnement', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [],
+        tools: [{ title: 'Calculateur ROI', duration: '30 min', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url, partner: 'pmtools' }],
+        free: []
+      },
+      initiation: {
+        courses: [{ title: 'Démarrage & Gestion du contenu', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Startup Tech', duration: '45 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [{ title: 'CharterPro', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url, partner: 'pmtools' }],
+        free: []
+      },
+      scope: {
+        courses: [{ title: 'Démarrage & Gestion du contenu', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Construction', duration: '60 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [{ title: 'Créateur SDP', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url + '?tool=wbs', partner: 'pmtools' }],
+        free: [{ title: 'Comment créer une SDP', duration: '20 min', platform: 'YouTube', url: 'https://www.youtube.com/results?search_query=structure+découpage+projet', partner: 'youtube' }]
+      },
+      time: {
+        courses: [{ title: 'Gestion temps & coûts', duration: '2.5 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Construction', duration: '60 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [{ title: 'Créateur Gantt', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url + '?tool=gantt', partner: 'pmtools' }],
+        free: [{ title: 'Méthode chemin critique', duration: '15 min', platform: 'YouTube', url: 'https://www.youtube.com/results?search_query=chemin+critique+projet', partner: 'youtube' }]
+      },
+      cost: {
+        courses: [{ title: 'Gestion valeur acquise', duration: '2.5 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Crise budgétaire', duration: '45 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [{ title: 'Calculateur GVA', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url + '?tool=evm', partner: 'pmtools' }],
+        free: [{ title: 'GVA en 10 minutes', duration: '10 min', platform: 'YouTube', url: 'https://www.youtube.com/results?search_query=valeur+acquise+projet', partner: 'youtube' }]
+      },
+      quality: {
+        courses: [{ title: 'Gestion qualité & risques', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [],
+        tools: [{ title: 'Générateur DMAIC', duration: '30 min', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url + '?tool=dmaic', partner: 'pmtools' }],
+        free: []
+      },
+      resources: {
+        courses: [{ title: 'Produit, Ressources & Approvisionnement', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Startup Tech', duration: '45 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [],
+        free: []
+      },
+      communication: {
+        courses: [{ title: 'Communication & compétences relationnelles', duration: '2.5 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Innovation R&D', duration: '60 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [],
+        free: []
+      },
+      risk: {
+        courses: [{ title: 'Gestion qualité & risques', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Innovation R&D', duration: '60 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [{ title: 'Registre des risques', duration: '1 hr', platform: 'ProjectManagerTool', url: PARTNER_RESOURCES.pmtools.url + '?tool=risk', partner: 'pmtools' }],
+        free: []
+      },
+      procurement: {
+        courses: [{ title: 'Produit, Ressources & Approvisionnement', duration: '2 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [],
+        tools: [],
+        free: []
+      },
+      softskills: {
+        courses: [{ title: 'Communication & compétences relationnelles', duration: '2.5 hrs', platform: 'Executive Producer', url: PARTNER_RESOURCES.thinkific.url, partner: 'thinkific' }],
+        simulations: [{ title: 'Project Apex: Startup Tech', duration: '45 min', platform: 'BizSimHub', url: PARTNER_RESOURCES.bizsimhub.url, partner: 'bizsimhub' }],
+        tools: [],
+        free: []
+      }
+    };
+
+    // Track resource clicks for partner analytics
+    async function trackResourceClick(partner, resource, url) {
+      try {
+        await fetch('/api/assessment/track-lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({ assessmentId, partnerCode: partner, resourceClicked: resource })
+        });
+      } catch (e) { console.log('Track error:', e); }
+      window.open(url, '_blank');
+    }
+
+    // Render functions
+    function render() {
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <main class="max-w-4xl mx-auto py-8 px-6 fade-in">
+          ${state.currentStep !== 'welcome' ? renderProgressIndicator() : ''}
+          ${renderStep()}
+        </main>
+      `;
+    }
+
+    function renderProgressIndicator() {
+      const steps = STEPS.filter(s => s !== 'welcome');
+      const currentIndex = steps.indexOf(state.currentStep);
+      const stepLabels = ['Profil', 'Objectifs', 'Évaluation', 'Résultats'];
+      return `
+        <div class="flex items-center justify-center gap-2 mb-8">
+          ${steps.map((step, i) => `
+            <div class="flex items-center">
+              <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                i <= currentIndex ? 'bg-brand-500 text-white' : 'bg-stone-700 text-stone-400'
+              }">${i + 1}</div>
+              ${i < steps.length - 1 ? '<div class="w-8 h-0.5 bg-stone-700 mx-1"></div>' : ''}
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderStep() {
+      switch(state.currentStep) {
+        case 'welcome': return renderWelcome();
+        case 'profile': return renderProfile();
+        case 'objectives': return renderObjectives();
+        case 'assessment': return renderAssessment();
+        case 'results': return renderResults();
+        default: return '';
+      }
+    }
+
+    function renderWelcome() {
+      return `
+        <div class="text-center">
+          <div class="text-6xl mb-6">📊</div>
+          <h1 class="text-4xl font-black text-white mb-4">Évaluation des compétences GP</h1>
+          <p class="text-xl text-stone-300 mb-8 max-w-xl mx-auto">
+            Évaluez-vous sur 13 compétences clés en GP et obtenez une feuille de route de développement personnalisée.
+          </p>
+          
+          <div class="flex justify-center gap-8 mb-10">
+            <div class="text-center">
+              <div class="text-3xl font-bold text-white">13</div>
+              <div class="text-sm text-stone-400">Compétences</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-white">10</div>
+              <div class="text-sm text-stone-400">Minutes</div>
+            </div>
+            <div class="text-center">
+              <div class="text-3xl font-bold text-white">1</div>
+              <div class="text-sm text-stone-400">Feuille de route</div>
+            </div>
+          </div>
+
+          <button onclick="goToStep('profile')" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-12 rounded-lg text-lg transition-colors">
+            Commencer l'évaluation →
+          </button>
+
+          <div class="mt-12 bg-stone-800 rounded-xl p-6 max-w-xl mx-auto text-left border border-stone-700">
+            <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+              <span class="text-brand-500">📋</span> Ce que couvre cette évaluation
+            </h3>
+            <div class="space-y-2 text-sm text-stone-300">
+              <p>• <strong class="text-white">13 domaines de compétences GP</strong> alignés avec le PMBOK</p>
+              <p>• <strong class="text-white">Grilles détaillées</strong> pour vous aider à vous auto-évaluer avec précision</p>
+              <p>• <strong class="text-white">Feuille de route personnalisée</strong> basée sur vos objectifs de carrière</p>
+              <p>• <strong class="text-white">Ressources sélectionnées</strong> parmi cours, simulations et outils</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProfile() {
+      const certs = ['PMP', 'CAPM', 'PMI-ACP', 'PRINCE2', 'Scrum Master', 'Aucune'];
+      const isValid = state.profile.name && state.profile.title && state.profile.experience;
+      
+      return `
+        <div>
+          <h2 class="text-3xl font-bold text-white mb-2">À propos de vous</h2>
+          <p class="text-stone-300 mb-8">Aidez-nous à personnaliser votre feuille de route de développement.</p>
+
+          <div class="bg-stone-800 rounded-xl p-8 border border-stone-700">
+            <div class="grid gap-6">
+              <div>
+                <label class="block text-sm font-medium text-stone-300 mb-2">Nom complet *</label>
+                <input type="text" id="name" value="${state.profile.name}" 
+                  oninput="updateProfile('name', this.value)"
+                  class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                  placeholder="Jean Tremblay">
+              </div>
+
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label class="block text-sm font-medium text-stone-300 mb-2">Titre d'emploi *</label>
+                  <input type="text" id="title" value="${state.profile.title}"
+                    oninput="updateProfile('title', this.value)"
+                    class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    placeholder="Gestionnaire de projet">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-stone-300 mb-2">Organisation</label>
+                  <input type="text" id="organization" value="${state.profile.organization}"
+                    oninput="updateProfile('organization', this.value)"
+                    class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500"
+                    placeholder="Acme Inc.">
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-stone-300 mb-2">Années d'expérience en GP *</label>
+                <select id="experience" onchange="updateProfile('experience', this.value)"
+                  class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white focus:ring-2 focus:ring-brand-500 focus:border-brand-500">
+                  <option value="">Sélectionner...</option>
+                  <option value="0-1" ${state.profile.experience === '0-1' ? 'selected' : ''}>0-1 an (Nouveau en GP)</option>
+                  <option value="2-3" ${state.profile.experience === '2-3' ? 'selected' : ''}>2-3 ans (Quelque expérience)</option>
+                  <option value="4-5" ${state.profile.experience === '4-5' ? 'selected' : ''}>4-5 ans (Expérimenté)</option>
+                  <option value="6-10" ${state.profile.experience === '6-10' ? 'selected' : ''}>6-10 ans (Senior)</option>
+                  <option value="10+" ${state.profile.experience === '10+' ? 'selected' : ''}>10+ ans (Expert)</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-stone-300 mb-2">Certifications (sélectionner toutes celles qui s'appliquent)</label>
+                <div class="flex flex-wrap gap-2">
+                  ${certs.map(cert => `
+                    <button onclick="toggleCert('${cert}')" class="px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      state.profile.certifications.includes(cert)
+                        ? 'bg-brand-500 text-white'
+                        : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                    }">${cert}</button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-8">
+            <button onclick="goToStep('welcome')" class="text-stone-400 hover:text-white font-medium">← Retour</button>
+            <button onclick="goToStep('objectives')" id="continueBtn" ${!isValid ? 'disabled' : ''} 
+              class="font-bold py-3 px-8 rounded-lg transition-colors ${
+                isValid ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-stone-700 text-stone-500 cursor-not-allowed'
+              }">Continuer →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderObjectives() {
+      const goals = [
+        { value: 'exploring', icon: '🔍', label: 'Explorer la gestion de projet', desc: "Je veux comprendre ce qu'est la GP", target: 3, targetLabel: '60%' },
+        { value: 'support', icon: '🤝', label: 'Soutenir mon rôle actuel', desc: "J'ai besoin de compétences GP mais je n'aurai pas de titre GP", target: 3, targetLabel: '60%' },
+        { value: 'job', icon: '💼', label: 'Obtenir un emploi de GP', desc: 'Je veux devenir un GP professionnel', target: 4, targetLabel: '80%' },
+        { value: 'pmp', icon: '🎓', label: 'Obtenir la certification PMP', desc: "Je veux réussir l'examen PMP", target: 5, targetLabel: '90%+' },
+        { value: 'improve', icon: '📈', label: "M'améliorer en tant que GP", desc: 'Je suis déjà GP et je veux progresser', target: 4, targetLabel: '80%' }
+      ];
+
+      return `
+        <div>
+          <h2 class="text-3xl font-bold text-white mb-2">Quel est votre objectif?</h2>
+          <p class="text-stone-300 mb-8">Cela nous aide à définir les bons niveaux de compétence cibles pour votre évaluation.</p>
+
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <div class="space-y-3">
+              ${goals.map(goal => `
+                <button onclick="setObjective('goal', '${goal.value}')" 
+                  class="w-full p-4 rounded-xl border-2 text-left transition-all flex items-start gap-4 ${
+                    state.objectives.goal === goal.value 
+                      ? 'border-brand-500 bg-brand-500/10' 
+                      : 'border-stone-700 hover:border-stone-600'
+                  }">
+                  <div class="text-3xl">${goal.icon}</div>
+                  <div class="flex-1">
+                    <div class="font-bold text-white">${goal.label}</div>
+                    <div class="text-sm text-stone-400">${goal.desc}</div>
+                  </div>
+                  <div class="text-xs text-stone-400">Cible: ${goal.targetLabel}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+
+          <div class="flex justify-between mt-8">
+            <button onclick="goToStep('profile')" class="text-stone-400 hover:text-white font-medium">← Retour</button>
+            <button onclick="goToStep('assessment')" ${!state.objectives.goal ? 'disabled' : ''}
+              class="font-bold py-3 px-8 rounded-lg transition-colors ${
+                state.objectives.goal ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-stone-700 text-stone-500 cursor-not-allowed'
+              }">Continuer →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderAssessment() {
+      const completed = Object.keys(state.scores).length;
+      const progress = (completed / SKILL_AREAS.length) * 100;
+      const allScored = SKILL_AREAS.every(s => state.scores[s.id] !== undefined);
+
+      return `
+        <div>
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-3xl font-bold text-white mb-2">Évaluation des compétences</h2>
+              <p class="text-stone-300">Évaluez votre niveau actuel dans chaque domaine.</p>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-brand-500">${completed}/13</div>
+              <div class="text-sm text-stone-400">Complété</div>
+            </div>
+          </div>
+
+          <div class="bg-brand-500/20 border border-brand-500/30 rounded-lg p-4 mb-6">
+            <div class="flex items-start gap-3">
+              <span class="text-brand-400 text-xl">💡</span>
+              <div class="text-sm text-stone-300">
+                <strong>Comment vous évaluer:</strong> Cliquez sur "Voir les critères" sur n'importe quelle compétence pour voir exactement ce que chaque niveau signifie. 
+                Soyez honnête — cela nous aide à créer la meilleure feuille de route pour vous!
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full h-2 bg-stone-700 rounded-full mb-6">
+            <div class="h-full bg-brand-500 rounded-full transition-all duration-300" style="width: ${progress}%"></div>
+          </div>
+
+          <div class="space-y-4">
+            ${SKILL_AREAS.map((skill, idx) => renderSkillCard(skill, idx)).join('')}
+          </div>
+
+          <div class="flex justify-between mt-8">
+            <button onclick="goToStep('objectives')" class="text-stone-400 hover:text-white font-medium">← Retour</button>
+            <button onclick="goToStep('results')" ${!allScored ? 'disabled' : ''}
+              class="font-bold py-3 px-8 rounded-lg transition-colors ${
+                allScored ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-stone-700 text-stone-500 cursor-not-allowed'
+              }">Voir mes résultats →</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSkillCard(skill, idx) {
+      const isExpanded = state.expandedSkill === skill.id;
+      const currentScore = state.scores[skill.id];
+      
+      return `
+        <div class="bg-stone-800 rounded-xl border-2 transition-all ${
+          currentScore !== undefined ? 'border-brand-500/50' : 'border-stone-700'
+        }">
+          <div class="p-6">
+            <div class="flex justify-between items-start mb-4">
+              <div class="flex items-center gap-3">
+                <span class="w-8 h-8 bg-stone-700 text-white rounded-full flex items-center justify-center text-sm font-bold">${idx + 1}</span>
+                <div>
+                  <h3 class="text-lg font-bold text-white">${skill.name}</h3>
+                  <p class="text-sm text-stone-400">${skill.description}</p>
+                </div>
+              </div>
+              ${currentScore !== undefined ? `
+                <div class="text-right">
+                  <div class="text-2xl font-bold text-brand-500">${currentScore}</div>
+                  <div class="text-xs text-stone-300">${skill.rubric[currentScore].label}</div>
+                </div>
+              ` : ''}
+            </div>
+
+            <div class="flex gap-2 mb-3">
+              ${[1,2,3,4,5].map(v => `
+                <button onclick="setScore('${skill.id}', ${v})" 
+                  class="flex-1 py-3 rounded-lg text-sm font-medium transition-all ${
+                    currentScore === v
+                      ? 'bg-brand-500 text-white shadow-lg scale-105'
+                      : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                  }">
+                  <div class="font-bold">${v}</div>
+                  <div class="text-xs opacity-75">${skill.rubric[v].label}</div>
+                </button>
+              `).join('')}
+            </div>
+
+            <button onclick="toggleExpanded('${skill.id}')" 
+              class="text-sm text-brand-400 hover:text-brand-300 font-medium flex items-center gap-1">
+              ${isExpanded ? '▼ Masquer' : '▶ Voir'} les critères pour vous aider à décider
+            </button>
+          </div>
+
+          ${isExpanded ? `
+            <div class="border-t border-stone-700 bg-stone-900 p-6">
+              <div class="grid gap-4">
+                ${[1,2,3,4,5].map(level => `
+                  <div class="flex gap-4 ${currentScore === level ? 'bg-brand-500/10 -mx-4 px-4 py-3 rounded-lg' : ''}">
+                    <div class="flex-shrink-0">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ${
+                        currentScore === level ? 'bg-brand-500 text-white' : 'bg-stone-700 text-stone-300'
+                      }">${level}</div>
+                    </div>
+                    <div class="flex-1">
+                      <div class="font-bold text-white mb-1">${skill.rubric[level].label}</div>
+                      <ul class="text-sm text-stone-300 space-y-1">
+                        ${skill.rubric[level].criteria.map(c => `<li class="flex items-start gap-2"><span class="text-stone-500 mt-0.5">•</span><span>${c}</span></li>`).join('')}
+                      </ul>
+                      <button onclick="setScore('${skill.id}', ${level})" class="mt-2 text-xs font-medium ${currentScore === level ? 'text-brand-400' : 'text-stone-500 hover:text-brand-400'}">
+                        ${currentScore === level ? '✓ Sélectionné' : 'Sélectionner ce niveau'}
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    function renderResults() {
+      const goals = {
+        exploring: { label: 'Explorer la GP', icon: '🔍', target: 3 },
+        support: { label: 'Soutenir mon rôle', icon: '🤝', target: 3 },
+        job: { label: 'Emploi GP', icon: '💼', target: 4 },
+        pmp: { label: 'Certification PMP', icon: '🎓', target: 5 },
+        improve: { label: "M'améliorer", icon: '📈', target: 4 }
+      };
+      
+      const currentGoal = goals[state.objectives.goal] || goals.job;
+      const overallScore = calculateOverallScore();
+      const gaps = getGaps();
+      const topGaps = gaps.slice(0, 5);
+      const strengths = SKILL_AREAS.filter(s => state.scores[s.id] >= currentGoal.target);
+      const roadmap = generateRoadmap();
+
+      // Save assessment
+      saveAssessment(overallScore, gaps.length, strengths.length);
+
+      return `
+        <div>
+          <div class="bg-stone-800 -mx-6 -mt-8 px-6 py-8 mb-8 rounded-b-3xl border-b border-stone-700">
+            <div class="flex justify-between items-start mb-4">
+              <div>
+                <h2 class="text-3xl font-bold text-white mb-2">Vos résultats</h2>
+                <p class="text-stone-300">Évaluation pour ${state.profile.name}</p>
+              </div>
+              <div class="text-right">
+                <div class="text-3xl">${currentGoal.icon}</div>
+                <div class="text-sm text-stone-300">Objectif: ${currentGoal.label}</div>
+              </div>
+            </div>
+            
+            <div class="grid md:grid-cols-4 gap-4 mt-6">
+              <div class="bg-stone-700 rounded-xl p-4">
+                <div class="text-4xl font-black ${overallScore >= 80 ? 'text-green-500' : overallScore >= 60 ? 'text-yellow-500' : 'text-red-500'}">${overallScore}%</div>
+                <div class="text-sm text-stone-300">Score global</div>
+              </div>
+              <div class="bg-stone-700 rounded-xl p-4">
+                <div class="text-4xl font-black text-brand-500">${gaps.length}</div>
+                <div class="text-sm text-stone-300">Écarts de compétences</div>
+              </div>
+              <div class="bg-stone-700 rounded-xl p-4">
+                <div class="text-4xl font-black text-white">${state.objectives.timeline}</div>
+                <div class="text-sm text-stone-300">Semaines de plan</div>
+              </div>
+              <div class="bg-stone-700 rounded-xl p-4">
+                <div class="text-4xl font-black text-green-500">${strengths.length}</div>
+                <div class="text-sm text-stone-300">Forces</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Répartition des compétences -->
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <h3 class="font-bold text-white mb-4">Répartition des compétences</h3>
+            <div class="space-y-3">
+              ${SKILL_AREAS.map(skill => {
+                const score = state.scores[skill.id] || 0;
+                const barColor = score >= 4 ? 'bg-green-500' : score >= 3 ? 'bg-yellow-500' : 'bg-red-500';
+                const textColor = score >= 4 ? 'text-green-500' : score >= 3 ? 'text-yellow-500' : 'text-red-500';
+                return `
+                  <div class="flex items-center gap-4">
+                    <div class="w-40 text-sm text-stone-300 truncate">${skill.name}</div>
+                    <div class="flex-1 h-3 bg-stone-700 rounded-full overflow-hidden">
+                      <div class="${barColor} h-full transition-all duration-500" style="width: ${score * 20}%"></div>
+                    </div>
+                    <div class="w-12 text-right font-bold ${textColor}">${score * 20}%</div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+
+          <!-- Domaines prioritaires -->
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <h3 class="font-bold text-white mb-4">Domaines de développement prioritaires</h3>
+            <div class="space-y-3">
+              ${topGaps.length > 0 ? topGaps.map((gap, i) => `
+                <div class="flex items-center justify-between p-4 bg-stone-700 rounded-lg">
+                  <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${
+                      i === 0 ? 'bg-red-500' : 'bg-yellow-500'
+                    }">${i + 1}</span>
+                    <div>
+                      <div class="font-medium text-white">${gap.name}</div>
+                      <div class="text-sm text-stone-400">Actuel: ${gap.current * 20}% → Cible: ${gap.target * 20}%</div>
+                    </div>
+                  </div>
+                  <div class="text-lg font-bold ${i === 0 ? 'text-red-500' : 'text-yellow-500'}">+${gap.gap * 20}%</div>
+                </div>
+              `).join('') : `
+                <div class="text-center py-8 text-stone-400">
+                  🎉 Incroyable! Vous avez déjà atteint votre niveau cible dans tous les domaines!
+                </div>
+              `}
+            </div>
+          </div>
+
+          <!-- Préférences de la feuille de route -->
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <h3 class="font-bold text-white mb-4">Personnaliser votre feuille de route</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+              <div>
+                <label class="block text-sm font-medium text-stone-300 mb-2">Durée</label>
+                <div class="flex gap-2">
+                  ${[{ value: '8', label: '8 sem' }, { value: '12', label: '12 sem' }, { value: '16', label: '16 sem' }].map(opt => `
+                    <button onclick="updatePreference('timeline', '${opt.value}')"
+                      class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                        state.objectives.timeline === opt.value ? 'bg-brand-500 text-white' : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                      }">${opt.label}</button>
+                  `).join('')}
+                </div>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-stone-300 mb-2">Style d'apprentissage</label>
+                <div class="flex gap-2">
+                  ${[{ value: 'video', label: '📹 Vidéo' }, { value: 'hands-on', label: '🛠 Pratique' }, { value: 'balanced', label: '⚖️ Équilibré' }].map(opt => `
+                    <button onclick="updatePreference('learningStyle', '${opt.value}')"
+                      class="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+                        state.objectives.learningStyle === opt.value ? 'bg-brand-500 text-white' : 'bg-stone-700 text-stone-300 hover:bg-stone-600'
+                      }">${opt.label}</button>
+                  `).join('')}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Feuille de route personnalisée -->
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <div class="flex items-center justify-between mb-6">
+              <h3 class="font-bold text-white text-xl">Votre feuille de route de ${state.objectives.timeline} semaines</h3>
+              <span class="text-sm text-stone-400">${roadmap.totalHours} heures au total</span>
+            </div>
+
+            <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+              ${roadmap.phases.map(phase => `
+                <div class="flex-1 min-w-[120px]">
+                  <div class="h-2 rounded-full ${phase.color}"></div>
+                  <div class="mt-2 text-xs font-medium text-stone-300">${phase.name}</div>
+                  <div class="text-xs text-stone-400">Sem. ${phase.weeks}</div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="space-y-3">
+              ${roadmap.steps.map((step, i) => `
+                <div class="flex items-start gap-4 p-4 rounded-lg ${i % 2 === 0 ? 'bg-stone-700' : 'bg-stone-700/50'} border border-stone-600">
+                  <div class="flex-shrink-0">
+                    <div class="w-8 h-8 rounded-full bg-stone-600 text-white flex items-center justify-center text-sm font-bold">${i + 1}</div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                      <span class="px-2 py-0.5 rounded text-xs font-bold ${step.typeBadgeClass}">${step.type}</span>
+                      <button onclick="trackResourceClick('${step.partner}', '${step.title}', '${step.url}')" class="font-medium text-white hover:text-brand-500 transition-colors">
+                        ${step.title} →
+                      </button>
+                    </div>
+                    <div class="text-sm text-stone-400">${step.description}</div>
+                    <div class="flex items-center gap-4 mt-2 text-xs text-stone-500">
+                      <span>📍 ${step.platform}</span>
+                      <span>⏱ ${step.duration}</span>
+                      <span>📅 Sem. ${step.week}</span>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+
+            <div class="mt-6 pt-6 border-t border-stone-700">
+              <div class="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <div class="text-2xl font-bold text-green-500">${roadmap.counts.courses}</div>
+                  <div class="text-xs text-stone-400">Cours</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-purple-500">${roadmap.counts.simulations}</div>
+                  <div class="text-xs text-stone-400">Simulations</div>
+                </div>
+                <div>
+                  <div class="text-2xl font-bold text-cyan-500">${roadmap.counts.tools}</div>
+                  <div class="text-xs text-stone-400">Outils</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Liens des plateformes -->
+          <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-6">
+            <h3 class="font-bold text-white mb-4">Où accéder à vos ressources</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+              <a href="${PARTNER_RESOURCES.thinkific.url}" target="_blank" class="p-4 bg-green-500/10 rounded-lg border border-green-500/30 hover:border-green-500 transition-colors">
+                <div class="text-2xl mb-2">📚</div>
+                <div class="font-medium text-white">Cours de formation</div>
+                <div class="text-sm text-stone-400">the-executive-producer.com</div>
+                <div class="text-xs text-green-400 mt-2">${roadmap.counts.courses} cours dans votre plan →</div>
+              </a>
+              <a href="${PARTNER_RESOURCES.bizsimhub.url}" target="_blank" class="p-4 bg-purple-500/10 rounded-lg border border-purple-500/30 hover:border-purple-500 transition-colors">
+                <div class="text-2xl mb-2">🎮</div>
+                <div class="font-medium text-white">Simulations</div>
+                <div class="text-sm text-stone-400">bizsimlive.com</div>
+                <div class="text-xs text-purple-400 mt-2">${roadmap.counts.simulations} simulations dans votre plan →</div>
+              </a>
+              <a href="${PARTNER_RESOURCES.pmtools.url}" target="_blank" class="p-4 bg-cyan-500/10 rounded-lg border border-cyan-500/30 hover:border-cyan-500 transition-colors">
+                <div class="text-2xl mb-2">🛠</div>
+                <div class="font-medium text-white">Outils GP</div>
+                <div class="text-sm text-stone-400">projectmanagertool.com</div>
+                <div class="text-xs text-cyan-400 mt-2">${roadmap.counts.tools} outils dans votre plan →</div>
+              </a>
+            </div>
+          </div>
+
+          <!-- CTA Télécharger -->
+          <div class="bg-gradient-to-r from-brand-600 to-brand-500 rounded-xl p-8 text-center text-white">
+            <h3 class="text-2xl font-bold mb-2">Sauvegardez votre feuille de route</h3>
+            <p class="mb-6 opacity-90">Téléchargez un PDF joliment formaté pour suivre votre progression et partager avec votre gestionnaire.</p>
+            <button onclick="generateReport()" id="downloadBtn" class="bg-white text-brand-600 font-bold py-4 px-12 rounded-lg hover:bg-stone-100 transition-colors">
+              📄 Télécharger le rapport PDF
+            </button>
+          </div>
+
+          <div class="flex justify-between mt-8">
+            <button onclick="goToStep('assessment')" class="text-stone-400 hover:text-white font-medium">← Retour</button>
+            <button onclick="location.reload()" class="text-stone-400 hover:text-white font-medium">Recommencer</button>
+          </div>
+        </div>
+      `;
+    }
+
+    // Helper functions
+    function calculateOverallScore() {
+      const values = Object.values(state.scores);
+      if (values.length === 0) return 0;
+      return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 20);
+    }
+
+    function getGaps() {
+      const targetByGoal = { exploring: 3, support: 3, job: 4, pmp: 5, improve: 4 };
+      const target = targetByGoal[state.objectives.goal] || 4;
+      
+      return SKILL_AREAS
+        .map(skill => ({ ...skill, current: state.scores[skill.id] || 0, target, gap: target - (state.scores[skill.id] || 0) }))
+        .filter(s => s.gap > 0)
+        .sort((a, b) => b.gap - a.gap);
+    }
+
+    function generateRoadmap() {
+      const gaps = getGaps().slice(0, 5);
+      const weeks = parseInt(state.objectives.timeline);
+      const learningStyle = state.objectives.learningStyle;
+      
+      const phases = [
+        { name: 'Fondation', weeks: `1-${Math.floor(weeks/3)}`, color: 'bg-blue-500' },
+        { name: 'Construction', weeks: `${Math.floor(weeks/3)+1}-${Math.floor(2*weeks/3)}`, color: 'bg-purple-500' },
+        { name: 'Application', weeks: `${Math.floor(2*weeks/3)+1}-${weeks}`, color: 'bg-green-500' }
+      ];
+
+      const typeBadges = {
+        'COURS': 'bg-green-500/20 text-green-400',
+        'SIMULATION': 'bg-purple-500/20 text-purple-400',
+        'OUTIL': 'bg-cyan-500/20 text-cyan-400',
+        'GRATUIT': 'bg-yellow-500/20 text-yellow-400',
+        'ÉVALUER': 'bg-brand-500/20 text-brand-400'
+      };
+
+      const steps = [];
+      let currentWeek = 1;
+      let courseCount = 0, simCount = 0, toolCount = 0;
+      let totalHours = 0;
+      const weeksPerGap = Math.floor(weeks / Math.max(gaps.length, 1));
+
+      gaps.forEach((gap, gapIdx) => {
+        const resources = RESOURCE_MAP[gap.id] || { courses: [], simulations: [], tools: [], free: [] };
+        const skillName = gap.name;
+
+        if (resources.free && resources.free.length > 0) {
+          const free = resources.free[0];
+          steps.push({
+            type: 'GRATUIT', title: free.title, description: 'Contenu intro gratuit pour commencer',
+            platform: free.platform, duration: free.duration, week: currentWeek, skill: skillName,
+            url: free.url || '#', partner: free.partner || 'youtube',
+            typeBadgeClass: typeBadges['GRATUIT']
+          });
+          totalHours += 0.5;
+        }
+
+        if (resources.courses.length > 0 && (learningStyle === 'video' || learningStyle === 'balanced')) {
+          const course = resources.courses[0];
+          steps.push({
+            type: 'COURS', title: course.title, description: 'Formation complète avec leçons vidéo et quiz',
+            platform: course.platform, duration: course.duration, week: currentWeek, skill: skillName,
+            url: course.url || '#', partner: course.partner || 'thinkific',
+            typeBadgeClass: typeBadges['COURS']
+          });
+          totalHours += parseFloat(course.duration) || 2;
+          courseCount++;
+        }
+
+        if (resources.tools.length > 0 && (learningStyle === 'hands-on' || learningStyle === 'balanced')) {
+          const tool = resources.tools[0];
+          steps.push({
+            type: 'OUTIL', title: tool.title, description: 'Pratiquez avec un outil GP professionnel',
+            platform: tool.platform, duration: tool.duration, week: currentWeek + Math.floor(weeksPerGap / 2), skill: skillName,
+            url: tool.url || '#', partner: tool.partner || 'pmtools',
+            typeBadgeClass: typeBadges['OUTIL']
+          });
+          totalHours += parseFloat(tool.duration) || 1;
+          toolCount++;
+        }
+
+        if (resources.simulations.length > 0 && (learningStyle === 'hands-on' || learningStyle === 'balanced')) {
+          const sim = resources.simulations[0];
+          steps.push({
+            type: 'SIMULATION', title: sim.title, description: 'Appliquez les compétences dans une simulation réaliste',
+            platform: sim.platform, duration: sim.duration, week: currentWeek + weeksPerGap - 1, skill: skillName,
+            url: sim.url || '#', partner: sim.partner || 'bizsimhub',
+            typeBadgeClass: typeBadges['SIMULATION']
+          });
+          totalHours += 1;
+          simCount++;
+        }
+
+        currentWeek += weeksPerGap;
+      });
+
+      steps.push({
+        type: 'ÉVALUER', title: 'Réévaluez vos compétences', description: 'Refaites l\'évaluation pour mesurer votre progression',
+        platform: 'pmskillsassess.com', duration: '10 min', week: weeks, skill: 'Tous',
+        url: '/assessment-fr.html', partner: '',
+        typeBadgeClass: typeBadges['ÉVALUER']
+      });
+
+      steps.sort((a, b) => a.week - b.week);
+
+      return {
+        phases,
+        steps: steps.slice(0, 12),
+        totalHours: Math.round(totalHours),
+        counts: { courses: courseCount, simulations: simCount, tools: toolCount }
+      };
+    }
+
+    async function saveAssessment(overallScore, gapCount, strengthCount) {
+      try {
+        const response = await fetch('/api/assessment/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify({
+            profile: state.profile,
+            objectives: state.objectives,
+            scores: state.scores,
+            overallScore,
+            gapCount,
+            strengthCount
+          })
+        });
+        if (response.ok) {
+          const data = await response.json();
+          assessmentId = data.assessmentId;
+        }
+      } catch (e) { console.log('Save error:', e); }
+    }
+
+    async function generateReport() {
+      const btn = document.getElementById('downloadBtn');
+      btn.innerHTML = 'Génération...';
+      btn.disabled = true;
+      
+      await new Promise(r => setTimeout(r, 300));
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4');
+        const margin = 20;
+        const pageWidth = 210;
+        const contentWidth = pageWidth - margin * 2;
+        const goals = { exploring: { icon: '🔍', label: 'Explorer la GP', target: 3 }, support: { icon: '🤝', label: 'Soutenir mon rôle', target: 3 }, job: { icon: '💼', label: 'Emploi GP', target: 4 }, pmp: { icon: '🎓', label: 'Certification PMP', target: 5 }, improve: { icon: '📈', label: "M'améliorer", target: 4 } };
+        const currentGoal = goals[state.objectives.goal] || goals.improve;
+
+        function addFooter(doc, pageNum) {
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text(`Généré le ${new Date().toLocaleDateString('fr-CA')} | PM SkillsAssess`, margin, 285);
+          doc.text(`Page ${pageNum}`, pageWidth - margin - 10, 285);
+        }
+
+        function checkNewPage(doc, y, needed) {
+          if (y + needed > 270) {
+            addFooter(doc, doc.getNumberOfPages());
+            doc.addPage();
+            return 20;
+          }
+          return y;
+        }
+        
+        // === PAGE 1: En-tête + Score + Compétences ===
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 45, 'F');
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('ÉVALUATION COMPÉTENCES GP', margin, 20);
+        doc.setFontSize(12);
+        doc.setTextColor(200, 200, 200);
+        doc.text(`Rapport pour ${state.profile.name}`, margin, 30);
+        doc.setFontSize(10);
+        doc.text(`${state.profile.title || ''} ${state.profile.organization ? '| ' + state.profile.organization : ''} | ${state.profile.experience || ''} d'expérience`, margin, 38);
+        
+        let y = 55;
+        
+        // Score global + Objectif
+        const overallScore = calculateOverallScore();
+        doc.setFontSize(42);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(232, 115, 8);
+        doc.text(`${overallScore}%`, margin, y);
+        doc.setFontSize(14);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Score global', margin + 38, y - 8);
+        doc.setFontSize(11);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Objectif: ${currentGoal.label} | Cible: Niveau ${currentGoal.target}/5`, margin + 38, y);
+        
+        y += 15;
+
+        // Résumé lacunes & forces
+        const gaps = getGaps();
+        const strengths = SKILL_AREAS.filter(s => (state.scores[s.id] || 0) >= currentGoal.target);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(239, 68, 68);
+        doc.text(`${gaps.length} lacunes identifiées`, margin, y);
+        doc.setTextColor(16, 185, 129);
+        doc.text(`${strengths.length} forces`, margin + 50, y);
+        
+        y += 15;
+        
+        // Ventilation des compétences
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Ventilation des compétences', margin, y);
+        y += 3;
+
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Cible: Niveau ${currentGoal.target}`, margin + 50 + 80 * (currentGoal.target / 5) - 8, y + 3);
+        y += 7;
+        
+        SKILL_AREAS.forEach(skill => {
+          const score = state.scores[skill.id] || 0;
+          const isGap = score < currentGoal.target;
+          doc.setFontSize(9);
+          doc.setFont('helvetica', isGap ? 'bold' : 'normal');
+          doc.setTextColor(isGap ? 200 : 80, isGap ? 60 : 80, isGap ? 60 : 80);
+          doc.text(skill.name, margin, y);
+          
+          const levelLabels = ['', 'Novice', 'Débutant', 'Intermédiaire', 'Compétent', 'Expert'];
+          doc.setFontSize(7);
+          doc.setTextColor(130, 130, 130);
+          doc.text(levelLabels[score] || '', pageWidth - margin - 22, y);
+          doc.setFontSize(9);
+          doc.setTextColor(80, 80, 80);
+          doc.text(`${score * 20}%`, pageWidth - margin - 5, y);
+          
+          doc.setFillColor(220, 220, 220);
+          doc.rect(margin + 50, y - 3, 80, 4, 'F');
+          const barColor = score >= 4 ? [16, 185, 129] : score >= 3 ? [245, 158, 11] : [239, 68, 68];
+          doc.setFillColor(...barColor);
+          doc.rect(margin + 50, y - 3, 80 * (score / 5), 4, 'F');
+
+          const targetX = margin + 50 + 80 * (currentGoal.target / 5);
+          doc.setDrawColor(100, 100, 100);
+          doc.setLineWidth(0.3);
+          doc.line(targetX, y - 4, targetX, y + 1);
+          
+          y += 8;
+        });
+        
+        addFooter(doc, 1);
+
+        // === PAGE 2: Feuille de route ===
+        doc.addPage();
+        y = 20;
+
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('VOTRE FEUILLE DE ROUTE', margin, 20);
+        y = 40;
+
+        const roadmap = generateRoadmap();
+
+        // Phases
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Phases d\'apprentissage', margin, y);
+        y += 8;
+
+        const phaseColors = [[16, 185, 129], [59, 130, 246], [168, 85, 247]];
+        const phaseNamesFr = ['Fondations', 'Développement', 'Application'];
+        roadmap.phases.forEach((phase, i) => {
+          const phaseWidth = contentWidth / 3;
+          const px = margin + i * phaseWidth;
+          doc.setFillColor(...phaseColors[i]);
+          doc.rect(px + 1, y, phaseWidth - 2, 12, 'F');
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text(phaseNamesFr[i], px + 4, y + 5);
+          doc.setFontSize(7);
+          doc.text(`Semaines ${phase.weeks}`, px + 4, y + 10);
+        });
+        y += 20;
+
+        // Statistiques
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Total: ${roadmap.totalHours} heures | ${roadmap.counts.courses} cours | ${roadmap.counts.simulations} simulations | ${roadmap.counts.tools} outils`, margin, y);
+        y += 12;
+
+        // Lacunes prioritaires
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Lacunes prioritaires', margin, y);
+        y += 8;
+
+        gaps.slice(0, 5).forEach((gap, i) => {
+          y = checkNewPage(doc, y, 12);
+          doc.setFillColor(254, 242, 242);
+          doc.rect(margin, y - 4, contentWidth, 10, 'F');
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(180, 50, 50);
+          doc.text(`${i + 1}. ${gap.name}`, margin + 3, y + 2);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(120, 80, 80);
+          doc.text(`Actuel: Niveau ${gap.score}/5 | Cible: Niveau ${currentGoal.target}/5 | Écart: ${currentGoal.target - gap.score} niveaux`, margin + 60, y + 2);
+          y += 12;
+        });
+        y += 5;
+
+        // Parcours recommandé
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        y = checkNewPage(doc, y, 15);
+        doc.text('Parcours d\'apprentissage recommandé', margin, y);
+        y += 8;
+
+        const typeColors = {
+          'WATCH': [59, 130, 246], 'COURSE': [16, 185, 129], 'TOOL': [6, 182, 212],
+          'SIMULATE': [168, 85, 247], 'APPLY': [245, 158, 11], 'ASSESS': [232, 115, 8]
+        };
+        const typeLabelsFr = {
+          'WATCH': 'VIDÉO', 'COURSE': 'COURS', 'TOOL': 'OUTIL',
+          'SIMULATE': 'SIMULATION', 'APPLY': 'PRATIQUE', 'ASSESS': 'ÉVALUER'
+        };
+
+        roadmap.steps.forEach((step, i) => {
+          y = checkNewPage(doc, y, 18);
+          
+          const badgeColor = typeColors[step.type] || [100, 100, 100];
+          const badgeLabel = typeLabelsFr[step.type] || step.type;
+          doc.setFillColor(...badgeColor);
+          doc.roundedRect(margin, y - 3, 22, 5, 1, 1, 'F');
+          doc.setFontSize(6);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text(badgeLabel, margin + 2, y);
+
+          doc.setFontSize(7);
+          doc.setTextColor(150, 150, 150);
+          doc.text(`Sem. ${step.week}`, margin + 24, y);
+
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(40, 40, 40);
+          doc.text(step.title, margin + 38, y);
+
+          y += 5;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          doc.text(`${step.skill} | ${step.platform} | ${step.duration}`, margin + 38, y);
+
+          y += 8;
+        });
+
+        addFooter(doc, 2);
+
+        // === PAGE 3: Forces & Prochaines étapes ===
+        if (strengths.length > 0) {
+          doc.addPage();
+          y = 20;
+
+          doc.setFillColor(26, 26, 26);
+          doc.rect(0, 0, pageWidth, 30, 'F');
+          doc.setFontSize(20);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text('FORCES & PROCHAINES ÉTAPES', margin, 20);
+          y = 40;
+
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text('Vos forces', margin, y);
+          y += 8;
+
+          strengths.forEach(s => {
+            const score = state.scores[s.id] || 0;
+            doc.setFillColor(236, 253, 245);
+            doc.rect(margin, y - 4, contentWidth, 8, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(20, 120, 80);
+            doc.text(`✓ ${s.name} — Niveau ${score}/5`, margin + 3, y + 1);
+            y += 10;
+          });
+
+          y += 10;
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text('Prochaines étapes', margin, y);
+          y += 8;
+
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(80, 80, 80);
+          const nextSteps = [
+            '1. Commencez par la lacune prioritaire et complétez le cours recommandé',
+            '2. Pratiquez avec les outils et simulations pour chaque compétence',
+            '3. Appliquez vos apprentissages sur vos projets en cours',
+            `4. Réévaluez vos compétences dans ${state.objectives.timeline || 12} semaines`,
+            '5. Partagez votre feuille de route avec votre gestionnaire'
+          ];
+          nextSteps.forEach(step => {
+            doc.text(step, margin, y);
+            y += 7;
+          });
+
+          addFooter(doc, 3);
+        }
+        
+        const fileName = `Evaluation_GP_${state.profile.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+        
+      } catch (error) {
+        console.error('Erreur PDF:', error);
+        alert('Erreur lors de la génération du PDF: ' + error.message);
+      }
+      
+      btn.innerHTML = '📄 Télécharger le rapport PDF';
+      btn.disabled = false;
+    }
+
+    // Event handlers
+    function goToStep(step) { state.currentStep = step; render(); window.scrollTo(0, 0); }
+    function toggleCert(cert) {
+      if (state.profile.certifications.includes(cert)) {
+        state.profile.certifications = state.profile.certifications.filter(c => c !== cert);
+      } else {
+        state.profile.certifications.push(cert);
+      }
+      render();
+    }
+    function setScore(skillId, value) { state.scores[skillId] = value; render(); }
+    function toggleExpanded(skillId) { state.expandedSkill = state.expandedSkill === skillId ? null : skillId; render(); }
+    function setObjective(key, value) { state.objectives[key] = value; render(); }
+    function updatePreference(key, value) { state.objectives[key] = value; render(); }
+    function updateProfile(field, value) {
+      state.profile[field] = value;
+      const isValid = state.profile.name && state.profile.title && state.profile.experience;
+      const btn = document.getElementById('continueBtn');
+      if (btn) {
+        btn.disabled = !isValid;
+        btn.className = `font-bold py-3 px-8 rounded-lg transition-colors ${isValid ? 'bg-brand-500 hover:bg-brand-600 text-white' : 'bg-stone-700 text-stone-500 cursor-not-allowed'}`;
+      }
+    }
+
+    // Initialize
+    checkAuth().then(isAuth => { if (isAuth) render(); });
+  </script>
+</body>
+</html>

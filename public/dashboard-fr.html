@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes évaluations | Compétences GP</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50: '#fef3e2', 100: '#fde4bf', 200: '#fbc97f', 300: '#f9a93f', 400: '#f78b14', 500: '#e87308', 600: '#c75706', 700: '#a23d09', 800: '#85310f', 900: '#6e2a10' },
+            stone: { 50: '#fafaf9', 100: '#f5f5f4', 200: '#e7e5e4', 300: '#d6d3d1', 400: '#a8a29e', 500: '#78716c', 600: '#57534e', 700: '#44403c', 800: '#292524', 900: '#1c1917' }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-stone-900 min-h-screen">
+  <!-- Header -->
+  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+    <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
+      <a href="/index-fr.html" class="flex items-center gap-3 text-white font-semibold text-lg">
+        <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+          </svg>
+        </div>
+        Compétences<span class="text-brand-500">GP</span>
+      </a>
+      <div id="headerNav" class="flex items-center gap-4">
+        <a href="/dashboard.html" class="text-stone-400 hover:text-white text-sm">EN</a>
+        <span id="userName" class="text-stone-400 text-sm"></span>
+        <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto py-8 px-6">
+    <div id="loading" class="text-center py-20">
+      <div class="animate-spin w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+      <p class="text-stone-400">Chargement de vos évaluations...</p>
+    </div>
+    
+    <div id="content" class="hidden fade-in">
+      <!-- Header -->
+      <div class="flex justify-between items-start mb-8">
+        <div>
+          <h1 class="text-3xl font-bold text-white mb-2">Mes évaluations</h1>
+          <p class="text-stone-400">Suivez votre progression au fil du temps</p>
+        </div>
+        <a href="/assessment-fr.html" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+          + Nouvelle évaluation
+        </a>
+      </div>
+
+      <!-- Stats Summary -->
+      <div id="statsSummary" class="grid md:grid-cols-4 gap-4 mb-8"></div>
+
+      <!-- Latest Assessment -->
+      <div id="latestAssessment" class="mb-8"></div>
+
+      <!-- Assessment History -->
+      <div class="bg-stone-800 rounded-xl border border-stone-700 overflow-hidden">
+        <div class="p-6 border-b border-stone-700">
+          <h2 class="text-xl font-bold text-white">Historique des évaluations</h2>
+        </div>
+        <div id="historyList" class="divide-y divide-stone-700"></div>
+      </div>
+
+      <!-- Tips -->
+      <div class="mt-8 bg-brand-500/10 border border-brand-500/30 rounded-xl p-6">
+        <h3 class="font-bold text-white mb-3 flex items-center gap-2">
+          <span class="text-brand-400">💡</span> Conseils pour progresser
+        </h3>
+        <ul class="space-y-2 text-sm text-stone-300">
+          <li>• <strong class="text-white">Réévaluez-vous régulièrement</strong> — Nous recommandons tous les 2-3 mois pour suivre votre progression</li>
+          <li>• <strong class="text-white">Concentrez-vous sur 2-3 compétences à la fois</strong> — Essayer d'en améliorer trop en même temps mène à l'épuisement</li>
+          <li>• <strong class="text-white">Appliquez ce que vous apprenez</strong> — Utilisez les simulations et outils pour pratiquer les nouvelles compétences</li>
+          <li>• <strong class="text-white">Partagez avec votre gestionnaire</strong> — Vos rapports PDF peuvent appuyer les discussions de plan de développement</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="noAssessments" class="hidden text-center py-20">
+      <div class="text-6xl mb-6">📊</div>
+      <h2 class="text-2xl font-bold text-white mb-4">Aucune évaluation pour le moment</h2>
+      <p class="text-stone-400 mb-8 max-w-md mx-auto">
+        Passez votre première évaluation des compétences GP pour commencer à suivre votre parcours de développement.
+      </p>
+      <a href="/assessment-fr.html" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-8 rounded-lg transition-colors">
+        Passer ma première évaluation →
+      </a>
+    </div>
+  </main>
+
+  <script>
+    const authToken = localStorage.getItem('auth_token');
+    
+    // Check auth
+    if (!authToken) {
+      window.location.href = '/index-fr.html#login';
+    }
+
+    // Goal labels
+    const goalLabels = {
+      exploring: 'Explorer la GP',
+      support: 'Soutenir mon rôle',
+      job: 'Emploi GP',
+      pmp: 'Certification PMP',
+      improve: "M'améliorer"
+    };
+
+    // Load user and assessments
+    async function loadDashboard() {
+      try {
+        // Get user info
+        const userRes = await fetch('/api/auth/me', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!userRes.ok) throw new Error('Non authentifié');
+        const userData = await userRes.json();
+        document.getElementById('userName').textContent = `Bonjour, ${userData.user.name}`;
+
+        // Get assessment history
+        const historyRes = await fetch('/api/assessment/history', {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const historyData = await historyRes.json();
+
+        document.getElementById('loading').classList.add('hidden');
+
+        if (!historyData.assessments || historyData.assessments.length === 0) {
+          document.getElementById('noAssessments').classList.remove('hidden');
+          return;
+        }
+
+        document.getElementById('content').classList.remove('hidden');
+        renderDashboard(historyData.assessments);
+
+      } catch (error) {
+        console.error('Erreur chargement:', error);
+        window.location.href = '/index-fr.html#login';
+      }
+    }
+
+    function renderDashboard(assessments) {
+      const latest = assessments[0];
+      const totalAssessments = assessments.length;
+      const avgScore = Math.round(assessments.reduce((sum, a) => sum + (a.overall_score || 0), 0) / totalAssessments);
+      const improvement = assessments.length > 1 
+        ? (latest.overall_score || 0) - (assessments[assessments.length - 1].overall_score || 0)
+        : 0;
+
+      // Stats summary
+      document.getElementById('statsSummary').innerHTML = `
+        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+          <div class="text-3xl font-bold text-white">${totalAssessments}</div>
+          <div class="text-sm text-stone-400">Évaluations totales</div>
+        </div>
+        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+          <div class="text-3xl font-bold text-brand-500">${latest.overall_score || 0}%</div>
+          <div class="text-sm text-stone-400">Dernier score</div>
+        </div>
+        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+          <div class="text-3xl font-bold text-white">${avgScore}%</div>
+          <div class="text-sm text-stone-400">Score moyen</div>
+        </div>
+        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+          <div class="text-3xl font-bold ${improvement >= 0 ? 'text-green-500' : 'text-red-500'}">${improvement >= 0 ? '+' : ''}${improvement}%</div>
+          <div class="text-sm text-stone-400">Amélioration globale</div>
+        </div>
+      `;
+
+      // Latest assessment
+      document.getElementById('latestAssessment').innerHTML = `
+        <div class="bg-gradient-to-r from-brand-600/20 to-brand-500/10 rounded-xl p-6 border border-brand-500/30">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <h2 class="text-xl font-bold text-white mb-1">Dernière évaluation</h2>
+              <p class="text-sm text-stone-400">${formatDate(latest.completed_at)}</p>
+            </div>
+            <div class="text-right">
+              <div class="text-4xl font-black text-brand-500">${latest.overall_score || 0}%</div>
+              <div class="text-sm text-stone-400">Score global</div>
+            </div>
+          </div>
+          <div class="grid md:grid-cols-3 gap-4 mt-4">
+            <div class="bg-stone-800/50 rounded-lg p-4">
+              <div class="text-2xl font-bold text-red-400">${latest.gap_count || 0}</div>
+              <div class="text-xs text-stone-400">Écarts identifiés</div>
+            </div>
+            <div class="bg-stone-800/50 rounded-lg p-4">
+              <div class="text-2xl font-bold text-green-400">${latest.strength_count || 0}</div>
+              <div class="text-xs text-stone-400">Forces</div>
+            </div>
+            <div class="bg-stone-800/50 rounded-lg p-4">
+              <div class="text-2xl font-bold text-white">${goalLabels[latest.goal] || latest.goal || 'N/A'}</div>
+              <div class="text-xs text-stone-400">Objectif</div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      // History list
+      document.getElementById('historyList').innerHTML = assessments.map((a, i) => `
+        <div class="p-4 hover:bg-stone-700/50 transition-colors">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
+                (a.overall_score || 0) >= 80 ? 'bg-green-500/20 text-green-400' :
+                (a.overall_score || 0) >= 60 ? 'bg-yellow-500/20 text-yellow-400' :
+                'bg-red-500/20 text-red-400'
+              }">
+                ${a.overall_score || 0}%
+              </div>
+              <div>
+                <div class="font-medium text-white">${formatDate(a.completed_at)}</div>
+                <div class="text-sm text-stone-400">
+                  ${goalLabels[a.goal] || a.goal || 'Aucun objectif'} • ${a.gap_count || 0} écarts • ${a.strength_count || 0} forces
+                </div>
+              </div>
+            </div>
+            <div class="text-sm">
+              ${i === 0 ? '<span class="px-2 py-1 bg-brand-500/20 text-brand-400 rounded-full text-xs">Plus récent</span>' : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return 'N/A';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('fr-CA', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('auth_token');
+      window.location.href = '/index-fr.html';
+    }
+
+    // Initialize
+    loadDashboard();
+  </script>
+</body>
+</html>

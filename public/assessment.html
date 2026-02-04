@@ -39,6 +39,7 @@
         PM Skills<span class="text-brand-500">Assess</span>
       </a>
       <div id="headerUserInfo" class="flex items-center gap-4">
+        <a href="/assessment-fr.html" class="text-stone-400 hover:text-white text-sm">FR</a>
         <a href="/" class="text-stone-400 hover:text-white text-sm transition-colors">← Back</a>
       </div>
     </div>
@@ -1046,7 +1047,7 @@
       goToStep('results');
     }
 
-    // PDF Generation (simplified)
+    // PDF Generation with full roadmap
     async function generateReport() {
       const btn = document.getElementById('downloadBtn');
       btn.innerHTML = 'Generating...';
@@ -1060,46 +1061,95 @@
         const margin = 20;
         const pageWidth = 210;
         const contentWidth = pageWidth - margin * 2;
+        const goals = { exploring: { icon: '🔍', label: 'Exploring PM', target: 3 }, support: { icon: '🤝', label: 'Supporting Role', target: 3 }, job: { icon: '💼', label: 'PM Job', target: 4 }, pmp: { icon: '🎓', label: 'PMP Certification', target: 5 }, improve: { icon: '📈', label: 'Improving', target: 4 } };
+        const currentGoal = goals[state.objectives.goal] || goals.improve;
+
+        function addFooter(doc, pageNum) {
+          doc.setFontSize(8);
+          doc.setTextColor(150, 150, 150);
+          doc.text(`Generated ${new Date().toLocaleDateString()} | PM SkillsAssess`, margin, 285);
+          doc.text(`Page ${pageNum}`, pageWidth - margin - 10, 285);
+        }
+
+        function checkNewPage(doc, y, needed) {
+          if (y + needed > 270) {
+            addFooter(doc, doc.getNumberOfPages());
+            doc.addPage();
+            return 20;
+          }
+          return y;
+        }
         
-        // Header
+        // === PAGE 1: Header + Score + Skills ===
         doc.setFillColor(26, 26, 26);
-        doc.rect(0, 0, pageWidth, 40, 'F');
+        doc.rect(0, 0, pageWidth, 45, 'F');
         doc.setFontSize(24);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(255, 255, 255);
-        doc.text('PM SKILLS ASSESSMENT', margin, 25);
+        doc.text('PM SKILLS ASSESSMENT', margin, 20);
         doc.setFontSize(12);
         doc.setTextColor(200, 200, 200);
-        doc.text(`Report for ${state.profile.name}`, margin, 35);
+        doc.text(`Report for ${state.profile.name}`, margin, 30);
+        doc.setFontSize(10);
+        doc.text(`${state.profile.title || ''} ${state.profile.organization ? '| ' + state.profile.organization : ''} | ${state.profile.experience || ''} experience`, margin, 38);
         
         let y = 55;
         
-        // Overall score
+        // Overall score + Goal
         const overallScore = calculateOverallScore();
-        doc.setFontSize(48);
+        doc.setFontSize(42);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(232, 115, 8);
         doc.text(`${overallScore}%`, margin, y);
         doc.setFontSize(14);
         doc.setTextColor(100, 100, 100);
-        doc.text('Overall Score', margin + 40, y - 5);
+        doc.text('Overall Score', margin + 38, y - 8);
+        doc.setFontSize(11);
+        doc.setTextColor(120, 120, 120);
+        doc.text(`Goal: ${currentGoal.label} | Target: Level ${currentGoal.target}/5`, margin + 38, y);
         
-        y += 20;
+        y += 15;
+
+        // Gap & Strength summary
+        const gaps = getGaps();
+        const strengths = SKILL_AREAS.filter(s => (state.scores[s.id] || 0) >= currentGoal.target);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(239, 68, 68);
+        doc.text(`${gaps.length} skill gaps identified`, margin, y);
+        doc.setTextColor(16, 185, 129);
+        doc.text(`${strengths.length} strengths`, margin + 55, y);
+        
+        y += 15;
         
         // Skills breakdown
         doc.setFontSize(16);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(50, 50, 50);
         doc.text('Skills Breakdown', margin, y);
-        y += 10;
+        y += 3;
+
+        // Target line label
+        doc.setFontSize(7);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`Target: Level ${currentGoal.target}`, margin + 50 + 80 * (currentGoal.target / 5) - 8, y + 3);
+        y += 7;
         
         SKILL_AREAS.forEach(skill => {
           const score = state.scores[skill.id] || 0;
-          doc.setFontSize(10);
-          doc.setFont('helvetica', 'normal');
-          doc.setTextColor(80, 80, 80);
+          const isGap = score < currentGoal.target;
+          doc.setFontSize(9);
+          doc.setFont('helvetica', isGap ? 'bold' : 'normal');
+          doc.setTextColor(isGap ? 200 : 80, isGap ? 60 : 80, isGap ? 60 : 80);
           doc.text(skill.name, margin, y);
-          doc.text(`${score * 20}%`, pageWidth - margin - 15, y);
+          
+          const levelLabels = ['', 'Novice', 'Beginner', 'Intermediate', 'Proficient', 'Expert'];
+          doc.setFontSize(7);
+          doc.setTextColor(130, 130, 130);
+          doc.text(levelLabels[score] || '', pageWidth - margin - 20, y);
+          doc.setFontSize(9);
+          doc.setTextColor(80, 80, 80);
+          doc.text(`${score * 20}%`, pageWidth - margin - 5, y);
           
           // Progress bar
           doc.setFillColor(220, 220, 220);
@@ -1107,14 +1157,185 @@
           const barColor = score >= 4 ? [16, 185, 129] : score >= 3 ? [245, 158, 11] : [239, 68, 68];
           doc.setFillColor(...barColor);
           doc.rect(margin + 50, y - 3, 80 * (score / 5), 4, 'F');
+
+          // Target line
+          const targetX = margin + 50 + 80 * (currentGoal.target / 5);
+          doc.setDrawColor(100, 100, 100);
+          doc.setLineWidth(0.3);
+          doc.line(targetX, y - 4, targetX, y + 1);
           
           y += 8;
         });
         
-        // Footer
-        doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text(`Generated ${new Date().toLocaleDateString()} | PM SkillsAssess`, margin, 285);
+        addFooter(doc, 1);
+
+        // === PAGE 2: Development Roadmap ===
+        doc.addPage();
+        y = 20;
+
+        doc.setFillColor(26, 26, 26);
+        doc.rect(0, 0, pageWidth, 30, 'F');
+        doc.setFontSize(20);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('YOUR DEVELOPMENT ROADMAP', margin, 20);
+        y = 40;
+
+        const roadmap = generateRoadmap();
+
+        // Phases overview
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Learning Phases', margin, y);
+        y += 8;
+
+        const phaseColors = [[16, 185, 129], [59, 130, 246], [168, 85, 247]];
+        roadmap.phases.forEach((phase, i) => {
+          const phaseWidth = contentWidth / 3;
+          const px = margin + i * phaseWidth;
+          doc.setFillColor(...phaseColors[i]);
+          doc.rect(px + 1, y, phaseWidth - 2, 12, 'F');
+          doc.setFontSize(9);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text(phase.name, px + 4, y + 5);
+          doc.setFontSize(7);
+          doc.text(`Weeks ${phase.weeks}`, px + 4, y + 10);
+        });
+        y += 20;
+
+        // Summary stats
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Total: ${roadmap.totalHours} hours | ${roadmap.counts.courses} courses | ${roadmap.counts.simulations} simulations | ${roadmap.counts.tools} tools`, margin, y);
+        y += 12;
+
+        // Top gaps
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('Priority Skill Gaps', margin, y);
+        y += 8;
+
+        gaps.slice(0, 5).forEach((gap, i) => {
+          y = checkNewPage(doc, y, 12);
+          doc.setFillColor(254, 242, 242);
+          doc.rect(margin, y - 4, contentWidth, 10, 'F');
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(180, 50, 50);
+          doc.text(`${i + 1}. ${gap.name}`, margin + 3, y + 2);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(120, 80, 80);
+          doc.text(`Current: Level ${gap.score}/5 | Target: Level ${currentGoal.target}/5 | Gap: ${currentGoal.target - gap.score} levels`, margin + 60, y + 2);
+          y += 12;
+        });
+        y += 5;
+
+        // Roadmap steps
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        y = checkNewPage(doc, y, 15);
+        doc.text('Recommended Learning Path', margin, y);
+        y += 8;
+
+        const typeColors = {
+          'WATCH': [59, 130, 246], 'COURSE': [16, 185, 129], 'TOOL': [6, 182, 212],
+          'SIMULATE': [168, 85, 247], 'APPLY': [245, 158, 11], 'ASSESS': [232, 115, 8]
+        };
+
+        roadmap.steps.forEach((step, i) => {
+          y = checkNewPage(doc, y, 18);
+          
+          // Type badge
+          const badgeColor = typeColors[step.type] || [100, 100, 100];
+          doc.setFillColor(...badgeColor);
+          doc.roundedRect(margin, y - 3, 18, 5, 1, 1, 'F');
+          doc.setFontSize(6);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text(step.type, margin + 2, y);
+
+          // Week
+          doc.setFontSize(7);
+          doc.setTextColor(150, 150, 150);
+          doc.text(`Week ${step.week}`, margin + 20, y);
+
+          // Title
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(40, 40, 40);
+          doc.text(step.title, margin + 36, y);
+
+          // Details line
+          y += 5;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(100, 100, 100);
+          doc.text(`${step.skill} | ${step.platform} | ${step.duration}`, margin + 36, y);
+
+          y += 8;
+        });
+
+        addFooter(doc, 2);
+
+        // === PAGE 3: Strengths & Next Steps ===
+        if (strengths.length > 0) {
+          doc.addPage();
+          y = 20;
+
+          doc.setFillColor(26, 26, 26);
+          doc.rect(0, 0, pageWidth, 30, 'F');
+          doc.setFontSize(20);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 255, 255);
+          doc.text('STRENGTHS & NEXT STEPS', margin, 20);
+          y = 40;
+
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text('Your Strengths', margin, y);
+          y += 8;
+
+          strengths.forEach(s => {
+            const score = state.scores[s.id] || 0;
+            doc.setFillColor(236, 253, 245);
+            doc.rect(margin, y - 4, contentWidth, 8, 'F');
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(20, 120, 80);
+            doc.text(`✓ ${s.name} — Level ${score}/5`, margin + 3, y + 1);
+            y += 10;
+          });
+
+          y += 10;
+          doc.setFontSize(14);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(50, 50, 50);
+          doc.text('Next Steps', margin, y);
+          y += 8;
+
+          doc.setFontSize(10);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(80, 80, 80);
+          const nextSteps = [
+            '1. Start with the highest-priority gap and complete the recommended course',
+            '2. Practice with hands-on tools and simulations for each skill area',
+            '3. Apply what you learn on your current projects',
+            `4. Reassess in ${state.objectives.timeline || 12} weeks to measure progress`,
+            '5. Share your roadmap with your manager to align development goals'
+          ];
+          nextSteps.forEach(step => {
+            doc.text(step, margin, y);
+            y += 7;
+          });
+
+          addFooter(doc, 3);
+        }
         
         const fileName = `PM_Skills_${state.profile.name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
         doc.save(fileName);

@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
   try {
     const result = await sql`
-      SELECT id, email, name, organization, job_title, experience_level, is_admin, created_at
+      SELECT id, email, name, organization, job_title, is_admin, created_at
       FROM users 
       WHERE id = ${decoded.userId}
     `;
@@ -27,9 +27,8 @@ export default async function handler(req, res) {
 
     const user = result.rows[0];
 
-    // Get assessment count
     const assessments = await sql`
-      SELECT COUNT(*) as count FROM assessment_results WHERE user_id = ${user.id}
+      SELECT COUNT(*) as count FROM assessments WHERE user_id = ${user.id}
     `;
 
     return res.status(200).json({
@@ -39,7 +38,6 @@ export default async function handler(req, res) {
         name: user.name,
         organization: user.organization,
         jobTitle: user.job_title,
-        experienceLevel: user.experience_level,
         isAdmin: user.is_admin,
         createdAt: user.created_at,
         assessmentCount: parseInt(assessments.rows[0].count)
