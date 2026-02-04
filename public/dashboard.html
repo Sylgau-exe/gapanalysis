@@ -22,9 +22,9 @@
     body { font-family: 'Inter', sans-serif; }
   </style>
 </head>
-<body class="bg-stone-900 min-h-screen">
+<body class="bg-[#0b0b14] min-h-screen">
   <!-- Header -->
-  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+  <header class="border-b border-[#1e1e35] bg-[#0b0b14]/95 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href="/" class="flex items-center gap-3 text-white font-semibold text-lg">
         <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
@@ -35,8 +35,8 @@
         PM Skills<span class="text-brand-500">Assess</span>
       </a>
       <nav id="headerNav" class="flex items-center gap-4">
-        <a href="/dashboard-fr.html" class="text-stone-400 hover:text-white text-sm">FR</a>
-        <span class="text-stone-400 text-sm">Loading...</span>
+        <a href="/dashboard-fr.html" class="text-slate-400 hover:text-white text-sm">FR</a>
+        <span class="text-slate-400 text-sm">Loading...</span>
       </nav>
     </div>
   </header>
@@ -70,10 +70,10 @@
 
         // Update header
         document.getElementById('headerNav').innerHTML = `
-          <a href="/dashboard-fr.html" class="text-stone-500 hover:text-white text-sm font-medium">FR</a>
-          <span class="text-stone-400 text-sm">Hi, <span class="text-white font-medium">${currentUser.name}</span></span>
+          <a href="/dashboard-fr.html" class="text-slate-500 hover:text-white text-sm font-medium">FR</a>
+          <span class="text-slate-400 text-sm">Hi, <span class="text-white font-medium">${currentUser.name}</span></span>
           ${currentUser.isAdmin ? '<a href="/admin.html" class="text-brand-500 hover:text-brand-400 text-sm font-medium">Admin</a>' : ''}
-          <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Logout</button>
+          <button onclick="logout()" class="text-slate-400 hover:text-white text-sm">Logout</button>
         `;
 
         // Get assessments
@@ -99,7 +99,7 @@
           <div class="text-center py-20">
             <div class="text-6xl mb-6">📊</div>
             <h1 class="text-3xl font-bold text-white mb-4">No Assessments Yet</h1>
-            <p class="text-stone-400 mb-8">Take your first PM skills assessment to see your results here.</p>
+            <p class="text-slate-400 mb-8">Take your first PM skills assessment to see your results here.</p>
             <a href="/assessment.html" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-8 rounded-lg transition-colors">
               Start Assessment →
             </a>
@@ -115,7 +115,7 @@
         <div class="flex justify-between items-start mb-8">
           <div>
             <h1 class="text-3xl font-bold text-white mb-2">My Assessments</h1>
-            <p class="text-stone-400">Track your PM skills progress over time</p>
+            <p class="text-slate-400">Track your PM skills progress over time</p>
           </div>
           <a href="/assessment.html" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
             New Assessment
@@ -123,30 +123,30 @@
         </div>
 
         <!-- Latest Assessment Summary -->
-        <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mb-8">
+        <div class="bg-[#131320] rounded-xl p-6 border border-[#1e1e35] mb-8">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <div class="text-sm text-stone-400 mb-1">Latest Assessment</div>
+              <div class="text-sm text-slate-400 mb-1">Latest Assessment</div>
               <div class="text-lg font-bold text-white">${new Date(latest.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
             </div>
             <div class="text-right">
               <div class="text-4xl font-black ${latest.overallScore >= 80 ? 'text-emerald-500' : latest.overallScore >= 60 ? 'text-amber-500' : 'text-rose-500'}">${latest.overallScore}%</div>
-              <div class="text-sm text-stone-400">Overall Score</div>
+              <div class="text-sm text-slate-400">Overall Score</div>
             </div>
           </div>
           
-          <div class="grid grid-cols-3 gap-4 pt-4 border-t border-stone-700">
+          <div class="grid grid-cols-3 gap-4 pt-4 border-t border-[#1e1e35]">
             <div class="text-center">
               <div class="text-2xl font-bold text-white">${latest.gapCount}</div>
-              <div class="text-xs text-stone-400">Skill Gaps</div>
+              <div class="text-xs text-slate-400">Skill Gaps</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-white">${latest.strengthCount}</div>
-              <div class="text-xs text-stone-400">Strengths</div>
+              <div class="text-xs text-slate-400">Strengths</div>
             </div>
             <div class="text-center">
               <div class="text-2xl font-bold text-white">${goalLabels[latest.objectives.goal] || 'N/A'}</div>
-              <div class="text-xs text-stone-400">Goal</div>
+              <div class="text-xs text-slate-400">Goal</div>
             </div>
           </div>
         </div>
@@ -155,18 +155,18 @@
         <h2 class="text-xl font-bold text-white mb-4">Assessment History</h2>
         <div class="space-y-4">
           ${assessments.map((a, i) => `
-            <div class="bg-stone-800 rounded-xl p-4 border border-stone-700 flex items-center justify-between">
+            <div class="bg-[#131320] rounded-xl p-4 border border-[#1e1e35] flex items-center justify-between">
               <div class="flex items-center gap-4">
                 <div class="w-12 h-12 rounded-lg ${a.overallScore >= 80 ? 'bg-emerald-500/20 text-emerald-500' : a.overallScore >= 60 ? 'bg-amber-500/20 text-amber-500' : 'bg-rose-500/20 text-rose-500'} flex items-center justify-center font-bold">
                   ${a.overallScore}%
                 </div>
                 <div>
                   <div class="font-medium text-white">${goalLabels[a.objectives.goal] || 'Assessment'}</div>
-                  <div class="text-sm text-stone-400">${new Date(a.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
+                  <div class="text-sm text-slate-400">${new Date(a.completedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</div>
                 </div>
               </div>
               <div class="text-right">
-                <div class="text-sm text-stone-400">${a.gapCount} gaps • ${a.strengthCount} strengths</div>
+                <div class="text-sm text-slate-400">${a.gapCount} gaps • ${a.strengthCount} strengths</div>
                 ${i === 0 ? '<span class="text-xs bg-brand-500/20 text-brand-500 px-2 py-1 rounded mt-1 inline-block">Latest</span>' : ''}
               </div>
             </div>
@@ -174,9 +174,9 @@
         </div>
 
         <!-- Progress Tips -->
-        <div class="bg-stone-800 rounded-xl p-6 border border-stone-700 mt-8">
+        <div class="bg-[#131320] rounded-xl p-6 border border-[#1e1e35] mt-8">
           <h3 class="font-bold text-white mb-4">📈 Tips for Progress</h3>
-          <ul class="space-y-2 text-sm text-stone-300">
+          <ul class="space-y-2 text-sm text-slate-300">
             <li>• <strong class="text-white">Retake every 4-6 weeks</strong> to track your improvement</li>
             <li>• <strong class="text-white">Focus on your top 3 gaps</strong> for maximum impact</li>
             <li>• <strong class="text-white">Complete the recommended courses</strong> in your roadmap</li>

@@ -34,9 +34,9 @@
     .gradient-text { background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
   </style>
 </head>
-<body class="bg-stone-900 min-h-screen">
+<body class="bg-[#0b0b14] min-h-screen">
   <!-- Header -->
-  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+  <header class="border-b border-[#1e1e35] bg-[#0b0b14]/95 sticky top-0 z-50">
     <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href="/index-fr.html" class="flex items-center gap-3 text-white font-semibold text-lg">
         <div class="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-600 rounded-xl flex items-center justify-center">
@@ -48,8 +48,8 @@
       </a>
       
       <nav id="headerNav" class="flex items-center gap-4">
-        <a href="/index.html" class="text-stone-400 hover:text-white text-sm">EN</a>
-        <button onclick="showAuth('login')" class="text-stone-300 hover:text-white text-sm font-medium transition-colors">Connexion</button>
+        <a href="/index.html" class="text-slate-400 hover:text-white text-sm">EN</a>
+        <button onclick="showAuth('login')" class="text-slate-300 hover:text-white text-sm font-medium transition-colors">Connexion</button>
         <button onclick="showAuth('register')" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Commencer gratuitement</button>
       </nav>
     </div>
@@ -57,8 +57,8 @@
 
   <!-- Auth Modal -->
   <div id="authModal" class="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" style="display: none;">
-    <div class="bg-stone-800 border border-stone-700 rounded-2xl p-8 max-w-md w-full fade-in relative">
-      <button onclick="hideAuth()" class="absolute top-4 right-4 text-stone-400 hover:text-white">
+    <div class="bg-[#131320] border border-[#1e1e35] rounded-2xl p-8 max-w-md w-full fade-in relative">
+      <button onclick="hideAuth()" class="absolute top-4 right-4 text-slate-400 hover:text-white">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
       
@@ -66,17 +66,17 @@
       <div id="loginForm">
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold text-white mb-2">Bon retour</h2>
-          <p class="text-stone-400">Connectez-vous pour accéder à vos évaluations</p>
+          <p class="text-slate-400">Connectez-vous pour accéder à vos évaluations</p>
         </div>
         
         <form onsubmit="handleLogin(event)" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-stone-300 mb-2">Courriel</label>
-            <input type="email" id="loginEmail" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="vous@entreprise.com">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Courriel</label>
+            <input type="email" id="loginEmail" required class="w-full px-4 py-3 bg-[#1a1a2e] border border-[#2a2a45] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="vous@entreprise.com">
           </div>
           <div>
-            <label class="block text-sm font-medium text-stone-300 mb-2">Mot de passe</label>
-            <input type="password" id="loginPassword" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Mot de passe</label>
+            <input type="password" id="loginPassword" required class="w-full px-4 py-3 bg-[#1a1a2e] border border-[#2a2a45] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="••••••••">
           </div>
           <div id="loginError" class="text-red-400 text-sm hidden"></div>
           <button type="submit" id="loginBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-colors">
@@ -84,7 +84,7 @@
           </button>
         </form>
         
-        <p class="text-center text-stone-400 text-sm mt-6">
+        <p class="text-center text-slate-400 text-sm mt-6">
           Pas encore de compte? <button onclick="showAuth('register')" class="text-brand-500 hover:text-brand-400 font-medium">Créer un compte gratuit</button>
         </p>
       </div>
@@ -93,21 +93,21 @@
       <div id="registerForm" style="display: none;">
         <div class="text-center mb-6">
           <h2 class="text-2xl font-bold text-white mb-2">Créer un compte gratuit</h2>
-          <p class="text-stone-400">Commencez votre évaluation des compétences GP</p>
+          <p class="text-slate-400">Commencez votre évaluation des compétences GP</p>
         </div>
         
         <form onsubmit="handleRegister(event)" class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-stone-300 mb-2">Nom complet</label>
-            <input type="text" id="registerName" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Jean Tremblay">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Nom complet</label>
+            <input type="text" id="registerName" required class="w-full px-4 py-3 bg-[#1a1a2e] border border-[#2a2a45] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Jean Tremblay">
           </div>
           <div>
-            <label class="block text-sm font-medium text-stone-300 mb-2">Courriel</label>
-            <input type="email" id="registerEmail" required class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="vous@entreprise.com">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Courriel</label>
+            <input type="email" id="registerEmail" required class="w-full px-4 py-3 bg-[#1a1a2e] border border-[#2a2a45] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="vous@entreprise.com">
           </div>
           <div>
-            <label class="block text-sm font-medium text-stone-300 mb-2">Mot de passe</label>
-            <input type="password" id="registerPassword" required minlength="8" class="w-full px-4 py-3 bg-stone-700 border border-stone-600 rounded-lg text-white placeholder-stone-400 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Minimum 8 caractères">
+            <label class="block text-sm font-medium text-slate-300 mb-2">Mot de passe</label>
+            <input type="password" id="registerPassword" required minlength="8" class="w-full px-4 py-3 bg-[#1a1a2e] border border-[#2a2a45] rounded-lg text-white placeholder-slate-500 focus:ring-2 focus:ring-brand-500 focus:border-brand-500" placeholder="Minimum 8 caractères">
           </div>
           <div id="registerError" class="text-red-400 text-sm hidden"></div>
           <button type="submit" id="registerBtn" class="w-full py-3 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-lg transition-colors">
@@ -115,7 +115,7 @@
           </button>
         </form>
         
-        <p class="text-center text-stone-400 text-sm mt-6">
+        <p class="text-center text-slate-400 text-sm mt-6">
           Déjà un compte? <button onclick="showAuth('login')" class="text-brand-500 hover:text-brand-400 font-medium">Se connecter</button>
         </p>
       </div>
@@ -133,7 +133,7 @@
         Évaluez vos compétences en<br><span class="gradient-text">Gestion de Projet</span>
       </h1>
       
-      <p class="text-xl text-stone-300 mb-10 max-w-2xl mx-auto">
+      <p class="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
         Évaluez-vous sur 13 domaines de compétences GP et obtenez une feuille de route personnalisée avec des cours, simulations et outils pour atteindre vos objectifs de carrière.
       </p>
       
@@ -141,7 +141,7 @@
         <button onclick="showAuth('register')" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-8 rounded-xl text-lg transition-colors">
           Commencer l'évaluation gratuite →
         </button>
-        <button onclick="showAuth('login')" class="bg-stone-800 hover:bg-stone-700 text-white font-bold py-4 px-8 rounded-xl text-lg transition-colors border border-stone-700">
+        <button onclick="showAuth('login')" class="bg-[#131320] hover:bg-[#1a1a2e] text-white font-bold py-4 px-8 rounded-xl text-lg transition-colors border border-[#1e1e35]">
           J'ai déjà un compte
         </button>
       </div>
@@ -149,91 +149,91 @@
       <div class="flex justify-center gap-12">
         <div class="text-center">
           <div class="text-4xl font-black text-white">13</div>
-          <div class="text-sm text-stone-400">Compétences</div>
+          <div class="text-sm text-slate-400">Compétences</div>
         </div>
         <div class="text-center">
           <div class="text-4xl font-black text-white">10</div>
-          <div class="text-sm text-stone-400">Minutes</div>
+          <div class="text-sm text-slate-400">Minutes</div>
         </div>
         <div class="text-center">
           <div class="text-4xl font-black text-white">1</div>
-          <div class="text-sm text-stone-400">Feuille de route</div>
+          <div class="text-sm text-slate-400">Feuille de route</div>
         </div>
       </div>
     </div>
   </section>
 
   <!-- Skills Overview -->
-  <section class="py-16 px-6 bg-stone-800/50">
+  <section class="py-16 px-6 bg-[#131320]/50">
     <div class="max-w-6xl mx-auto">
       <h2 class="text-3xl font-bold text-white text-center mb-4">13 domaines de compétences GP</h2>
-      <p class="text-stone-400 text-center mb-12 max-w-2xl mx-auto">Alignés avec le PMBOK et les meilleures pratiques de l'industrie</p>
+      <p class="text-slate-400 text-center mb-12 max-w-2xl mx-auto">Alignés avec le PMBOK et les meilleures pratiques de l'industrie</p>
       
       <div class="grid md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">📚</div>
           <div class="font-medium text-white">Fondamentaux GP</div>
-          <div class="text-xs text-stone-400">Standards, cycle de vie</div>
+          <div class="text-xs text-slate-400">Standards, cycle de vie</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">🔄</div>
           <div class="font-medium text-white">Méthodes Agile</div>
-          <div class="text-xs text-stone-400">Scrum, hybride</div>
+          <div class="text-xs text-slate-400">Scrum, hybride</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">💡</div>
           <div class="font-medium text-white">Gestion de produit</div>
-          <div class="text-xs text-stone-400">Vision, feuilles de route</div>
+          <div class="text-xs text-slate-400">Vision, feuilles de route</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">🚀</div>
           <div class="font-medium text-white">Démarrage projet</div>
-          <div class="text-xs text-stone-400">Charte, parties prenantes</div>
+          <div class="text-xs text-slate-400">Charte, parties prenantes</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">📋</div>
           <div class="font-medium text-white">Gestion du contenu</div>
-          <div class="text-xs text-stone-400">SDP, exigences</div>
+          <div class="text-xs text-slate-400">SDP, exigences</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">⏱️</div>
           <div class="font-medium text-white">Gestion du temps</div>
-          <div class="text-xs text-stone-400">Échéancier, chemin critique</div>
+          <div class="text-xs text-slate-400">Échéancier, chemin critique</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">💰</div>
           <div class="font-medium text-white">Gestion des coûts</div>
-          <div class="text-xs text-stone-400">Budget, valeur acquise</div>
+          <div class="text-xs text-slate-400">Budget, valeur acquise</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">✅</div>
           <div class="font-medium text-white">Gestion qualité</div>
-          <div class="text-xs text-stone-400">AQ/CQ, normes</div>
+          <div class="text-xs text-slate-400">AQ/CQ, normes</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">👥</div>
           <div class="font-medium text-white">Gestion ressources</div>
-          <div class="text-xs text-stone-400">Équipe, RACI</div>
+          <div class="text-xs text-slate-400">Équipe, RACI</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">💬</div>
           <div class="font-medium text-white">Communication</div>
-          <div class="text-xs text-stone-400">Plans, rapports</div>
+          <div class="text-xs text-slate-400">Plans, rapports</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">⚠️</div>
           <div class="font-medium text-white">Gestion des risques</div>
-          <div class="text-xs text-stone-400">Identification, réponse</div>
+          <div class="text-xs text-slate-400">Identification, réponse</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors">
           <div class="text-2xl mb-2">📝</div>
           <div class="font-medium text-white">Approvisionnement</div>
-          <div class="text-xs text-stone-400">Contrats, fournisseurs</div>
+          <div class="text-xs text-slate-400">Contrats, fournisseurs</div>
         </div>
-        <div class="bg-stone-800 border border-stone-700 rounded-xl p-4 hover:border-brand-500/50 transition-colors col-span-full md:col-span-1">
+        <div class="bg-[#131320] border border-[#1e1e35] rounded-xl p-4 hover:border-brand-500/50 transition-colors col-span-full md:col-span-1">
           <div class="text-2xl mb-2">🎯</div>
           <div class="font-medium text-white">Leadership</div>
-          <div class="text-xs text-stone-400">Influence, motivation</div>
+          <div class="text-xs text-slate-400">Influence, motivation</div>
         </div>
       </div>
     </div>
@@ -250,21 +250,21 @@
             <span class="text-3xl">1️⃣</span>
           </div>
           <h3 class="text-xl font-bold text-white mb-2">Auto-évaluation</h3>
-          <p class="text-stone-400">Évaluez votre niveau actuel dans 13 domaines de compétences GP avec des grilles d'évaluation détaillées.</p>
+          <p class="text-slate-400">Évaluez votre niveau actuel dans 13 domaines de compétences GP avec des grilles d'évaluation détaillées.</p>
         </div>
         <div class="text-center">
           <div class="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span class="text-3xl">2️⃣</span>
           </div>
           <h3 class="text-xl font-bold text-white mb-2">Analyse des écarts</h3>
-          <p class="text-stone-400">Visualisez vos forces et les domaines prioritaires à améliorer selon votre objectif de carrière.</p>
+          <p class="text-slate-400">Visualisez vos forces et les domaines prioritaires à améliorer selon votre objectif de carrière.</p>
         </div>
         <div class="text-center">
           <div class="w-16 h-16 bg-brand-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <span class="text-3xl">3️⃣</span>
           </div>
           <h3 class="text-xl font-bold text-white mb-2">Feuille de route personnalisée</h3>
-          <p class="text-stone-400">Obtenez un plan de développement sur 8-16 semaines avec des ressources ciblées.</p>
+          <p class="text-slate-400">Obtenez un plan de développement sur 8-16 semaines avec des ressources ciblées.</p>
         </div>
       </div>
     </div>
@@ -276,7 +276,7 @@
       <div class="bg-gradient-to-r from-brand-600 to-brand-500 rounded-2xl p-10 text-center">
         <h2 class="text-3xl font-bold text-white mb-4">Prêt à découvrir votre niveau?</h2>
         <p class="text-white/80 mb-8">Rejoignez des milliers de gestionnaires de projet qui ont amélioré leurs compétences grâce à notre évaluation gratuite.</p>
-        <button onclick="showAuth('register')" class="bg-white text-brand-600 font-bold py-4 px-10 rounded-xl text-lg hover:bg-stone-100 transition-colors">
+        <button onclick="showAuth('register')" class="bg-white text-brand-600 font-bold py-4 px-10 rounded-xl text-lg hover:bg-slate-100 transition-colors">
           Commencer maintenant — C'est gratuit
         </button>
       </div>
@@ -284,13 +284,13 @@
   </section>
 
   <!-- Footer -->
-  <footer class="border-t border-stone-800 py-8 px-6">
+  <footer class="border-t border-[#1e1e35] py-8 px-6">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-      <div class="text-stone-500 text-sm">© 2026 Sylvain PMO Consulting. Tous droits réservés.</div>
+      <div class="text-slate-500 text-sm">© 2026 Sylvain PMO Consulting. Tous droits réservés.</div>
       <div class="flex gap-6 text-sm">
-        <a href="/index.html" class="text-stone-400 hover:text-white">English</a>
-        <a href="#" class="text-stone-400 hover:text-white">Confidentialité</a>
-        <a href="#" class="text-stone-400 hover:text-white">Conditions</a>
+        <a href="/index.html" class="text-slate-400 hover:text-white">English</a>
+        <a href="#" class="text-slate-400 hover:text-white">Confidentialité</a>
+        <a href="#" class="text-slate-400 hover:text-white">Conditions</a>
       </div>
     </div>
   </footer>
@@ -305,10 +305,10 @@
         if (r.ok) {
           r.json().then(data => {
             document.getElementById('headerNav').innerHTML = `
-              <a href="/index.html" class="text-stone-400 hover:text-white text-sm">EN</a>
-              <span class="text-stone-400 text-sm">Bonjour, <span class="text-white">${data.user.name}</span></span>
+              <a href="/index.html" class="text-slate-400 hover:text-white text-sm">EN</a>
+              <span class="text-slate-400 text-sm">Bonjour, <span class="text-white">${data.user.name}</span></span>
               <a href="/assessment-fr.html" class="bg-brand-500 hover:bg-brand-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors">Mon évaluation</a>
-              <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Déconnexion</button>
+              <button onclick="logout()" class="text-slate-400 hover:text-white text-sm">Déconnexion</button>
             `;
           });
         }

@@ -24,9 +24,9 @@
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
-<body class="bg-stone-900 min-h-screen">
+<body class="bg-[#0b0b14] min-h-screen">
   <!-- Header -->
-  <header class="border-b border-stone-700 bg-stone-900/95 sticky top-0 z-50">
+  <header class="border-b border-[#1e1e35] bg-[#0b0b14]/95 sticky top-0 z-50">
     <div class="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
       <a href="/index-fr.html" class="flex items-center gap-3 text-white font-semibold text-lg">
         <div class="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-600 rounded-lg flex items-center justify-center">
@@ -37,9 +37,9 @@
         Compétences<span class="text-brand-500">GP</span>
       </a>
       <div id="headerNav" class="flex items-center gap-4">
-        <a href="/dashboard.html" class="text-stone-400 hover:text-white text-sm">EN</a>
-        <span id="userName" class="text-stone-400 text-sm"></span>
-        <button onclick="logout()" class="text-stone-400 hover:text-white text-sm">Déconnexion</button>
+        <a href="/dashboard.html" class="text-slate-400 hover:text-white text-sm">EN</a>
+        <span id="userName" class="text-slate-400 text-sm"></span>
+        <button onclick="logout()" class="text-slate-400 hover:text-white text-sm">Déconnexion</button>
       </div>
     </div>
   </header>
@@ -47,7 +47,7 @@
   <main class="max-w-5xl mx-auto py-8 px-6">
     <div id="loading" class="text-center py-20">
       <div class="animate-spin w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-      <p class="text-stone-400">Chargement de vos évaluations...</p>
+      <p class="text-slate-400">Chargement de vos évaluations...</p>
     </div>
     
     <div id="content" class="hidden fade-in">
@@ -55,7 +55,7 @@
       <div class="flex justify-between items-start mb-8">
         <div>
           <h1 class="text-3xl font-bold text-white mb-2">Mes évaluations</h1>
-          <p class="text-stone-400">Suivez votre progression au fil du temps</p>
+          <p class="text-slate-400">Suivez votre progression au fil du temps</p>
         </div>
         <a href="/assessment-fr.html" class="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-lg transition-colors">
           + Nouvelle évaluation
@@ -69,11 +69,11 @@
       <div id="latestAssessment" class="mb-8"></div>
 
       <!-- Assessment History -->
-      <div class="bg-stone-800 rounded-xl border border-stone-700 overflow-hidden">
-        <div class="p-6 border-b border-stone-700">
+      <div class="bg-[#131320] rounded-xl border border-[#1e1e35] overflow-hidden">
+        <div class="p-6 border-b border-[#1e1e35]">
           <h2 class="text-xl font-bold text-white">Historique des évaluations</h2>
         </div>
-        <div id="historyList" class="divide-y divide-stone-700"></div>
+        <div id="historyList" class="divide-y divide-[#1e1e35]"></div>
       </div>
 
       <!-- Tips -->
@@ -81,7 +81,7 @@
         <h3 class="font-bold text-white mb-3 flex items-center gap-2">
           <span class="text-brand-400">💡</span> Conseils pour progresser
         </h3>
-        <ul class="space-y-2 text-sm text-stone-300">
+        <ul class="space-y-2 text-sm text-slate-300">
           <li>• <strong class="text-white">Réévaluez-vous régulièrement</strong> — Nous recommandons tous les 2-3 mois pour suivre votre progression</li>
           <li>• <strong class="text-white">Concentrez-vous sur 2-3 compétences à la fois</strong> — Essayer d'en améliorer trop en même temps mène à l'épuisement</li>
           <li>• <strong class="text-white">Appliquez ce que vous apprenez</strong> — Utilisez les simulations et outils pour pratiquer les nouvelles compétences</li>
@@ -93,7 +93,7 @@
     <div id="noAssessments" class="hidden text-center py-20">
       <div class="text-6xl mb-6">📊</div>
       <h2 class="text-2xl font-bold text-white mb-4">Aucune évaluation pour le moment</h2>
-      <p class="text-stone-400 mb-8 max-w-md mx-auto">
+      <p class="text-slate-400 mb-8 max-w-md mx-auto">
         Passez votre première évaluation des compétences GP pour commencer à suivre votre parcours de développement.
       </p>
       <a href="/assessment-fr.html" class="inline-block bg-brand-500 hover:bg-brand-600 text-white font-bold py-4 px-8 rounded-lg transition-colors">
@@ -162,21 +162,21 @@
 
       // Stats summary
       document.getElementById('statsSummary').innerHTML = `
-        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+        <div class="bg-[#131320] rounded-xl p-5 border border-[#1e1e35]">
           <div class="text-3xl font-bold text-white">${totalAssessments}</div>
-          <div class="text-sm text-stone-400">Évaluations totales</div>
+          <div class="text-sm text-slate-400">Évaluations totales</div>
         </div>
-        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+        <div class="bg-[#131320] rounded-xl p-5 border border-[#1e1e35]">
           <div class="text-3xl font-bold text-brand-500">${latest.overall_score || 0}%</div>
-          <div class="text-sm text-stone-400">Dernier score</div>
+          <div class="text-sm text-slate-400">Dernier score</div>
         </div>
-        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+        <div class="bg-[#131320] rounded-xl p-5 border border-[#1e1e35]">
           <div class="text-3xl font-bold text-white">${avgScore}%</div>
-          <div class="text-sm text-stone-400">Score moyen</div>
+          <div class="text-sm text-slate-400">Score moyen</div>
         </div>
-        <div class="bg-stone-800 rounded-xl p-5 border border-stone-700">
+        <div class="bg-[#131320] rounded-xl p-5 border border-[#1e1e35]">
           <div class="text-3xl font-bold ${improvement >= 0 ? 'text-green-500' : 'text-red-500'}">${improvement >= 0 ? '+' : ''}${improvement}%</div>
-          <div class="text-sm text-stone-400">Amélioration globale</div>
+          <div class="text-sm text-slate-400">Amélioration globale</div>
         </div>
       `;
 
@@ -186,25 +186,25 @@
           <div class="flex justify-between items-start mb-4">
             <div>
               <h2 class="text-xl font-bold text-white mb-1">Dernière évaluation</h2>
-              <p class="text-sm text-stone-400">${formatDate(latest.completed_at)}</p>
+              <p class="text-sm text-slate-400">${formatDate(latest.completed_at)}</p>
             </div>
             <div class="text-right">
               <div class="text-4xl font-black text-brand-500">${latest.overall_score || 0}%</div>
-              <div class="text-sm text-stone-400">Score global</div>
+              <div class="text-sm text-slate-400">Score global</div>
             </div>
           </div>
           <div class="grid md:grid-cols-3 gap-4 mt-4">
-            <div class="bg-stone-800/50 rounded-lg p-4">
+            <div class="bg-[#131320]/50 rounded-lg p-4">
               <div class="text-2xl font-bold text-red-400">${latest.gap_count || 0}</div>
-              <div class="text-xs text-stone-400">Écarts identifiés</div>
+              <div class="text-xs text-slate-400">Écarts identifiés</div>
             </div>
-            <div class="bg-stone-800/50 rounded-lg p-4">
+            <div class="bg-[#131320]/50 rounded-lg p-4">
               <div class="text-2xl font-bold text-green-400">${latest.strength_count || 0}</div>
-              <div class="text-xs text-stone-400">Forces</div>
+              <div class="text-xs text-slate-400">Forces</div>
             </div>
-            <div class="bg-stone-800/50 rounded-lg p-4">
+            <div class="bg-[#131320]/50 rounded-lg p-4">
               <div class="text-2xl font-bold text-white">${goalLabels[latest.goal] || latest.goal || 'N/A'}</div>
-              <div class="text-xs text-stone-400">Objectif</div>
+              <div class="text-xs text-slate-400">Objectif</div>
             </div>
           </div>
         </div>
@@ -212,7 +212,7 @@
 
       // History list
       document.getElementById('historyList').innerHTML = assessments.map((a, i) => `
-        <div class="p-4 hover:bg-stone-700/50 transition-colors">
+        <div class="p-4 hover:bg-[#1a1a2e]/50 transition-colors">
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-4">
               <div class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg ${
@@ -224,7 +224,7 @@
               </div>
               <div>
                 <div class="font-medium text-white">${formatDate(a.completed_at)}</div>
-                <div class="text-sm text-stone-400">
+                <div class="text-sm text-slate-400">
                   ${goalLabels[a.goal] || a.goal || 'Aucun objectif'} • ${a.gap_count || 0} écarts • ${a.strength_count || 0} forces
                 </div>
               </div>
