@@ -94,6 +94,7 @@
           <a href="/assessment-fr.html" class="text-slate-500 hover:text-white text-sm font-medium">FR</a>
           <span class="text-slate-400 text-sm">Welcome, <span class="text-white font-medium">${currentUser.name}</span></span>
           <a href="/dashboard.html" class="text-slate-400 hover:text-white text-sm transition-colors">My Assessments</a>
+          <button onclick="localStorage.removeItem('auth_token');window.location.href='/'" class="text-slate-400 hover:text-white text-sm">Logout</button>
         `;
         if (currentUser.name && !state.profile.name) {
           state.profile.name = currentUser.name;

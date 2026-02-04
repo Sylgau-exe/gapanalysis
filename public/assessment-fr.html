@@ -94,6 +94,7 @@
           <a href="/assessment.html" class="text-slate-400 hover:text-white text-sm">EN</a>
           <span class="text-slate-400 text-sm">Bonjour, <span class="text-white font-medium">${currentUser.name}</span></span>
           <a href="/dashboard-fr.html" class="text-slate-400 hover:text-white text-sm transition-colors">Mes évaluations</a>
+          <button onclick="localStorage.removeItem('auth_token');window.location.href='/index-fr.html'" class="text-slate-400 hover:text-white text-sm">Déconnexion</button>
         `;
         if (currentUser.name && !state.profile.name) {
           state.profile.name = currentUser.name;
